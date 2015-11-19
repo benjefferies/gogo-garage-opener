@@ -2,9 +2,7 @@ package main
 
 import (
 	"github.com/emicklei/go-restful"
-	log "github.com/Sirupsen/logrus"
 	"time"
-	"strconv"
 )
 
 type Event struct {
@@ -13,7 +11,7 @@ type Event struct {
 }
 
 type EventResource struct {
-	events map[time.Time]Event
+	eventDao EventDao
 }
 
 func (e EventResource) Register (container *restful.Container) {
@@ -31,14 +29,9 @@ func (e EventResource) Register (container *restful.Container) {
 
 func (e EventResource) createEvent(request *restful.Request, response *restful.Response) {
 	event := Event{time.Now(), true}
-	log.Debug("Storing event: " + event.EventTime.String() + ", open: " + strconv.FormatBool(event.Open))
-	e.events[event.EventTime] = event
+	e.eventDao.createEvent(event)
 }
 
 func (e EventResource) findEvents(request *restful.Request, response *restful.Response) {
-	var events []Event
-	for _,v := range e.events {
-		events = append(events, v)
-	}
-	response.WriteEntity(events);
+	response.WriteEntity(e.eventDao.getEvents());
 }

@@ -3,15 +3,32 @@ import (
 	"github.com/emicklei/go-restful"
 	"net/http"
 	 log "github.com/Sirupsen/logrus"
-	"time"
+	"database/sql"
+	_ "github.com/mattn/go-sqlite3"
+	"os"
 )
 
 func main() {
 	log.SetLevel(log.DebugLevel)
 	wsContainer := restful.NewContainer()
+	os.Remove("gogo-garage-opener.db")
+	db, err := sql.Open("sqlite3", "gogo-garage-opener.db")
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	u := UserResource{map[string]User{}}
-	e := EventResource{map[time.Time]Event{}}
+	defer db.Close()
+	_, err = db.Exec("create table user (email text not null primary key, password text);")
+	if err != nil {
+		log.Fatal(err)
+	}
+	_, err = db.Exec("create table event (timestamp datetime not null primary key, open boolean);")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	u := UserResource{UserDao{*db}}
+	e := EventResource{EventDao{*db}}
 
 	u.Register(wsContainer)
 	e.Register(wsContainer)
