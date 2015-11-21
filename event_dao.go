@@ -26,7 +26,7 @@ func (e EventDao) createEvent(event Event) {
 
 func (e EventDao) getEvents() []Event {
 	log.Debug("getting all events")
-	rows,err := e.db.Query("select timestamp, event from event")
+	rows,err := e.db.Query("select timestamp, event from event order by timestamp desc")
 	if (err != nil) {
 		log.Error(err)
 	}

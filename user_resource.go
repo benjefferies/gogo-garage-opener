@@ -6,6 +6,7 @@ import (
 
 type User struct {
 	Email, Password string
+	Latitude, Longitude float64
 }
 
 type UserResource struct {

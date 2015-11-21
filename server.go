@@ -27,8 +27,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	u := UserResource{UserDao{*db}}
-	e := EventResource{EventDao{*db}}
+	userDao := UserDao{*db};
+	u := UserResource{userDao}
+	e := EventResource{EventDao{*db}, userDao}
 
 	u.Register(wsContainer)
 	e.Register(wsContainer)
