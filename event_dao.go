@@ -2,7 +2,6 @@ package main
 import (
 	"database/sql"
 	log "github.com/Sirupsen/logrus"
-	"strconv"
 	"time"
 )
 
@@ -11,11 +10,11 @@ type EventDao struct {
 }
 
 func (e EventDao) createEvent(event Event) {
-	log.Debug("inserting event timestamp:[%s],open:[%s]",event.EventTime, event.Open)
+	log.Debugf("inserting event, timestamp:[%s], open:[%s]", event.EventTime, event.Open)
 	tx,_ := e.db.Begin()
-	prepStmt,_ := e.db.Prepare("insert into event values (?, ?)")
+	prepStmt,err := e.db.Prepare("insert into event values (?, ?)")
 	defer prepStmt.Close()
-	_,err := prepStmt.Exec(event.EventTime, event.Open)
+	_,err = prepStmt.Exec(event.EventTime, event.Open)
 	if (err != nil) {
 		log.Error(err)
 		tx.Rollback()
@@ -26,25 +25,23 @@ func (e EventDao) createEvent(event Event) {
 
 func (e EventDao) getEvents() []Event {
 	log.Debug("getting all events")
-	rows,err := e.db.Query("select timestamp, event from event order by timestamp desc")
+	tx,_ := e.db.Begin()
+	rows,err := e.db.Query("select timestamp, open from event order by timestamp desc")
+	defer rows.Close()
 	if (err != nil) {
 		log.Error(err)
 	}
 	var events []Event;
-	for rows.Next() {
-		cols,err := rows.Columns()
-		if (err != nil) {
-			log.Error(err)
-		}
-		time,err := time.Parse(time.RFC3339Nano, cols[0])
-		if (err != nil) {
-			log.Error(err)
-		}
-		open,err := strconv.ParseBool(cols[1])
-		if (err != nil) {
-			log.Error(err)
-		}
-		events = append(events, Event{time, open})
+	log.Debug(rows.Err())
+	if (!rows.Next()) {
+		return events;
 	}
+	for rows.Next() {
+		var timestamp time.Time
+		var open bool
+		rows.Scan(&timestamp, &open)
+		events = append(events, Event{timestamp, open})
+	}
+	tx.Commit()
 	return events
 }

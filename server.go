@@ -18,11 +18,11 @@ func main() {
 	}
 
 	defer db.Close()
-	_, err = db.Exec("create table user (email text not null primary key, password text);")
+	_, err = db.Exec("CREATE TABLE user (email TEXT NOT NULL PRIMARY KEY, password TEXT, longitude REAL, latitude REAL);")
 	if err != nil {
 		log.Fatal(err)
 	}
-	_, err = db.Exec("create table event (timestamp datetime not null primary key, open boolean);")
+	_, err = db.Exec("CREATE TABLE event (timestamp DATETIME  NOT NULL PRIMARY KEY, open BOOLEAN);")
 	if err != nil {
 		log.Fatal(err)
 	}
