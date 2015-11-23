@@ -1,12 +1,15 @@
 package main
 import (
 	"github.com/emicklei/go-restful"
+	"time"
 )
 
 
 type User struct {
 	Email, Password string
 	Latitude, Longitude float64
+	Time time.Time
+	Duration, Distance int32
 }
 
 type UserResource struct {

@@ -37,15 +37,11 @@ func (e EventResource) garageEvent(request *restful.Request, response *restful.R
 	longitude := request.PathParameter("longitude")
 	log.Debugf("Request geolocation [%s, %s]", latitude, longitude)
 
-
-	distanceInMetres := distance(parseFloat64(latitude), parseFloat64(longitude), user.Latitude, user.Longitude)
-
-	log.Infof("%s is %s metres away", user.Email, distanceInMetres)
-
-	if (distanceInMetres > 100) {
-		return
+	if (withinRange(user, parseFloat64(latitude), parseFloat64(longitude))) {
+		log.Debugf("%s is within range", user.Email)
 	}
 
+	// Work out open or closed
 	events := e.eventDao.getEvents();
 
 	log.Debugf("Found [%s] events", len(events))

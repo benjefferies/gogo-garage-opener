@@ -24,7 +24,6 @@ func (e EventDao) createEvent(event Event) {
 }
 
 func (e EventDao) getEvents() []Event {
-	log.Debug("getting all events")
 	tx,_ := e.db.Begin()
 	rows,err := e.db.Query("select timestamp, open from event order by timestamp desc")
 	defer rows.Close()
@@ -32,7 +31,6 @@ func (e EventDao) getEvents() []Event {
 		log.Error(err)
 	}
 	var events []Event;
-	log.Debug(rows.Err())
 	if (!rows.Next()) {
 		return events;
 	}

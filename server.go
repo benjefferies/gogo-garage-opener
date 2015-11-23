@@ -18,7 +18,7 @@ func main() {
 	}
 
 	defer db.Close()
-	_, err = db.Exec("CREATE TABLE user (email TEXT NOT NULL PRIMARY KEY, password TEXT, longitude REAL, latitude REAL);")
+	_, err = db.Exec("CREATE TABLE user (email TEXT NOT NULL PRIMARY KEY, password TEXT, longitude REAL, latitude REAL, time DATETIME, duration INTEGER, distance INTEGER);")
 	if err != nil {
 		log.Fatal(err)
 	}
