@@ -22,7 +22,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	_, err = db.Exec("CREATE TABLE event (timestamp DATETIME  NOT NULL PRIMARY KEY, open BOOLEAN);")
+	_, err = db.Exec("CREATE TABLE event (timestamp DATETIME  NOT NULL PRIMARY KEY, email TEXT;")
 	if err != nil {
 		log.Fatal(err)
 	}

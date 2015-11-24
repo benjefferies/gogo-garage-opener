@@ -3,7 +3,6 @@ import (
 	"strconv"
 	log "github.com/Sirupsen/logrus"
 	"math"
-	"time"
 )
 
 
@@ -50,15 +49,5 @@ func withinRange(user User, lat, lon float64) bool {
 	distanceFrom := distance(user.Latitude, user.Longitude, lat, lon)
 	log.Debugf("%s is %sm from garage", user.Email, distanceFrom)
 
-	return distanceFrom <= float64(user.Distance) && timeToOpen(user)
-}
-
-func timeToOpen(user User) bool {
-	hour, minute, second := time.Now().Clock()
-	now := time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), hour, minute, second, 0, time.Now().Location())
-	openStartTime := time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), user.Time.Hour(), user.Time.Minute(), user.Time.Second(), 0, time.Now().Location())
-	openEndTime := time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), user.Time.Hour(), user.Time.Minute(), user.Time.Second(), 0, time.Now().Location()).Add(time.Duration(user.Duration) * time.Minute)
-
-	log.Debugf("Open start time [%s], open end time [%s], now [%s]", openStartTime, openEndTime, now)
-	return now.After(openStartTime) && now.Before(openEndTime)
+	return distanceFrom <= float64(user.Distance)
 }

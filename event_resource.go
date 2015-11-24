@@ -8,7 +8,7 @@ import (
 
 type Event struct {
 	EventTime time.Time
-	Open bool
+	Email string
 }
 
 type EventResource struct {
@@ -23,13 +23,14 @@ func (e EventResource) Register (container *restful.Container) {
 	Consumes(restful.MIME_JSON, restful.MIME_JSON).
 	Produces(restful.MIME_JSON, restful.MIME_JSON)
 
-	ws.Route(ws.POST("{email}/{latitude}/{longitude}").To(e.garageEvent))
+	ws.Route(ws.POST("geo/{email}/{latitude}/{longitude}").To(e.openGarageByLocation))
+	ws.Route(ws.POST("{email}").To(e.openGarage))
 	ws.Route(ws.GET("").To(e.findEvents))
 
 	container.Add(ws)
 }
 
-func (e EventResource) garageEvent(request *restful.Request, response *restful.Response) {
+func (e EventResource) openGarageByLocation(request *restful.Request, response *restful.Response) {
 	email := request.PathParameter("email")
 	user := e.userDao.getUser(email)
 	log.Debugf("Found user, email:[%s]", user.Email)
@@ -37,23 +38,21 @@ func (e EventResource) garageEvent(request *restful.Request, response *restful.R
 	longitude := request.PathParameter("longitude")
 	log.Debugf("Request geolocation [%s, %s]", latitude, longitude)
 
-	if (withinRange(user, parseFloat64(latitude), parseFloat64(longitude))) {
-		log.Debugf("%s is within range", user.Email)
-	}
 
 	// Work out open or closed
 	events := e.eventDao.getEvents();
-
-	log.Debugf("Found [%s] events", len(events))
-	var open bool
-	if (len(events) == 0) {
-		open = true
-	} else {
-		open = !events[0].Open;
+	if (withinRange(user, parseFloat64(latitude), parseFloat64(longitude)) && timeToOpen(user) && notOpenedYet(user, events)) {
+		log.Debugf("%s is within range and not opened yet", user.Email)
 	}
 
-	event := Event{time.Now(), open}
+	event := Event{time.Now(), email}
 	e.eventDao.createEvent(event)
+}
+
+func (e EventResource) openGarage(request *restful.Request, response *restful.Response) {
+	email := request.PathParameter("email")
+	user := e.userDao.getUser(email)
+	log.Debugf("%s is opening garage", user.Email)
 }
 
 func (e EventResource) findEvents(request *restful.Request, response *restful.Response) {
