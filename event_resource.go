@@ -24,7 +24,7 @@ func (e EventResource) Register (container *restful.Container) {
 	Produces(restful.MIME_JSON, restful.MIME_JSON)
 
 	ws.Route(ws.POST("geo/{email}/{latitude}/{longitude}").To(e.openGarageByLocation))
-	ws.Route(ws.POST("{email}").To(e.openGarage))
+	ws.Route(ws.POST("{email}").To(e.toggleGarage))
 	ws.Route(ws.GET("").To(e.findEvents))
 
 	container.Add(ws)
@@ -49,10 +49,13 @@ func (e EventResource) openGarageByLocation(request *restful.Request, response *
 	e.eventDao.createEvent(event)
 }
 
-func (e EventResource) openGarage(request *restful.Request, response *restful.Response) {
+func (e EventResource) toggleGarage(request *restful.Request, response *restful.Response) {
 	email := request.PathParameter("email")
 	user := e.userDao.getUser(email)
 	log.Debugf("%s is opening garage", user.Email)
+	toggleDoor()
+	event := Event{time.Now(), email}
+	e.eventDao.createEvent(event)
 }
 
 func (e EventResource) findEvents(request *restful.Request, response *restful.Response) {
