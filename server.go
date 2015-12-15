@@ -7,6 +7,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"os"
 	"github.com/spf13/viper"
+	"flag"
 )
 
 func main() {
@@ -28,10 +29,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// Need to execute in $GOPATH/src/benjefferies/gogo-garage-opener for some reason... look into
-	viper.SetConfigName("config")
-	viper.AddConfigPath(".")
-	viper.ReadInConfig()
+	loadConfiguration()
 
 	userDao := UserDao{*db};
 	u := UserResource{userDao}
@@ -42,4 +40,22 @@ func main() {
 
 	server := &http.Server{Addr: ":8080", Handler: wsContainer}
 	log.Fatal(server.ListenAndServe())
+}
+
+func loadConfiguration() {
+	var config string
+	flag.StringVar(&config, "c", "", "Absolute path to config")
+	flag.Parse()
+
+	// Need to execute in $GOPATH/src/benjefferies/gogo-garage-opener for some reason... look into
+	viper.SetConfigName("config")
+	viper.AddConfigPath(config)
+	err := viper.ReadInConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Debugf("Loaded configuration [%s]", viper.ConfigFileUsed())
+	for k,v := range viper.AllSettings() {
+		log.Debugf("%s=%v", k,v)
+	}
 }
