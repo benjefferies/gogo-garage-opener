@@ -14,6 +14,7 @@ type Event struct {
 type EventResource struct {
 	eventDao EventDao
 	userDao UserDao
+	doorController DoorController
 }
 
 func (e EventResource) Register (container *restful.Container) {
@@ -53,7 +54,7 @@ func (e EventResource) toggleGarage(request *restful.Request, response *restful.
 	email := request.PathParameter("email")
 	user := e.userDao.getUser(email)
 	log.Debugf("%s is opening garage", user.Email)
-	toggleDoor()
+	e.doorController.toggleDoor()
 	event := Event{time.Now(), email}
 	e.eventDao.createEvent(event)
 }

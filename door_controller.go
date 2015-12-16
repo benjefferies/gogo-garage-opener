@@ -4,15 +4,16 @@ import (
 	"github.com/stianeikeland/go-rpio"
 	log "github.com/Sirupsen/logrus"
 	"time"
-	"github.com/spf13/viper"
 )
 
+type DoorController struct {
+	relayPin int;
+}
 
-func toggleDoor() {
+func (c DoorController) toggleDoor() {
 
-	relayPin := viper.GetInt("relayPin")
-	log.Debugf("Using relay pin %s to open garage", relayPin)
-	pin := rpio.Pin(relayPin)
+	log.Debugf("Using relay pin %d to toggle relay", c.relayPin)
+	pin := rpio.Pin(c.relayPin)
 	// Open and map memory to access gpio, check for errors
 	if err := rpio.Open(); err != nil {
 		log.Error(err)
@@ -26,6 +27,7 @@ func toggleDoor() {
 
 	// Toggle pin on/off
 	pin.Toggle()
-	time.Sleep(time.Second * 2)
+	time.Sleep(time.Millisecond * 500)
 	pin.Toggle()
+	log.Debugf("Toggled pin %d on/off", c.relayPin)
 }
