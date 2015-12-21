@@ -14,17 +14,6 @@ func timeToOpen(user User) bool {
 	return now.After(openStartTime) && now.Before(openEndTime)
 }
 
-func notOpenedYet(user User, events []Event) bool {
-	openStartTime := startTime(user)
-	openEndTime := endTime(user)
-	for _,event := range events {
-		if (event.EventTime.After(openStartTime) && event.EventTime.Before(openEndTime)) {
-			return false
-		}
-	}
-	return true
-}
-
 func startTime(user User) time.Time {
 	return time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), user.Time.Hour(), user.Time.Minute(), user.Time.Second(), 0, time.Now().Location())
 }

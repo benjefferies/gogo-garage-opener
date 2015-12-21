@@ -15,6 +15,7 @@ type EventResource struct {
 	eventDao EventDao
 	userDao UserDao
 	doorController DoorController
+	distanceUtil DistanceUtil
 }
 
 func (e EventResource) Register (container *restful.Container) {
@@ -39,11 +40,12 @@ func (e EventResource) openGarageByLocation(request *restful.Request, response *
 	longitude := request.PathParameter("longitude")
 	log.Debugf("Request geolocation [%s, %s]", latitude, longitude)
 
-
-	// Work out open or closed
-	events := e.eventDao.getEvents();
-	if (withinRange(user, parseFloat64(latitude), parseFloat64(longitude)) && timeToOpen(user) && notOpenedYet(user, events)) {
-		log.Debugf("%s is within range and not opened yet", user.Email)
+	if (timeToOpen(user)) {
+		arrivalDuration := e.distanceUtil.getArrivalTime(user, parseFloat64(latitude), parseFloat64(longitude))
+		if &arrivalDuration != nil && arrivalDuration.Seconds() < 60 {
+			log.Debug("Within 60 seconds of destination, opening door")
+			e.doorController.toggleDoor()
+		}
 	}
 
 	event := Event{time.Now(), email}

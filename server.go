@@ -12,12 +12,20 @@ import (
 const database = "gogo-garage-opener.db"
 const port = 8080
 
+var (
+	relayPinFlag = flag.Int("r", -1, "The relay pin number on the raspberry pi")
+	portFlag = flag.Int("p", port, "The port the server is listening on")
+	databaseFlag = flag.String("db", database, "The database file")
+	apiKeyFlag = flag.String("key", "", "The google maps API key (with distance matrix api enabled)")
+)
+
 func main() {
+	flag.Parse()
 	log.SetLevel(log.DebugLevel)
-	databaseFlag, relayPinFlag, portFlag := flags();
-	db, err := sql.Open("sqlite3", databaseFlag)
+	logConfiguration()
+	db, err := sql.Open("sqlite3", *databaseFlag)
 	if err != nil {
-		log.Fatalf("Failed to open db [%s] errors [%s]", databaseFlag, err)
+		log.Fatalf("Failed to open db [%s] errors [%s]", *databaseFlag, err)
 	}
 
 	defer db.Close()
@@ -32,28 +40,19 @@ func main() {
 
 	userDao := UserDao{*db};
 	u := UserResource{userDao}
-	e := EventResource{eventDao:EventDao{*db}, userDao:userDao, doorController:DoorController{relayPinFlag}}
+	e := EventResource{eventDao:EventDao{*db}, userDao:userDao, doorController:DoorController{*relayPinFlag}, distanceUtil:DistanceUtil{apiKey:*apiKeyFlag}}
 
 	wsContainer := restful.NewContainer()
 	u.Register(wsContainer)
 	e.Register(wsContainer)
 
-	server := &http.Server{Addr: ":"+strconv.Itoa(portFlag), Handler: wsContainer}
+	server := &http.Server{Addr: ":"+strconv.Itoa(*portFlag), Handler: wsContainer}
 	log.Fatal(server.ListenAndServe())
 }
 
-// TODO consider wrapping in struct
-func flags() (databaseFlag string, relayPinFlag int, portFlag int) {
-	flag.IntVar(&relayPinFlag, "r", -1, "The relay pin number on the raspberry pi")
-	flag.IntVar(&portFlag, "p", port, "The port the server is listening on")
-	flag.StringVar(&databaseFlag, "db", database, "The database file")
-	flag.Parse()
-	if (relayPinFlag == -1) {
-		log.Fatal("Relay pin not set")
-	} else {
-		log.Debugf("Relay pin set to %d", relayPinFlag)
-	}
-	log.Debugf("Port set to [%d]", portFlag)
-	log.Debugf("Database set to [%s]", databaseFlag)
-	return databaseFlag, relayPinFlag, portFlag
+func logConfiguration() {
+	log.Debugf("Relay pin %d", *relayPinFlag)
+	log.Debugf("Api key %s", *apiKeyFlag)
+	log.Debugf("Database file %s", *databaseFlag)
+	log.Debugf("Webserver port %d", *portFlag)
 }

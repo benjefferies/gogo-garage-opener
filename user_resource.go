@@ -25,7 +25,6 @@ func (u UserResource) Register (container *restful.Container) {
 
 	ws.Route(ws.POST("").To(u.createUser))
 	ws.Route(ws.GET("{email}").To(u.getUser))
-
 	container.Add(ws)
 }
 
