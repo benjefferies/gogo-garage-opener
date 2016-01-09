@@ -21,12 +21,12 @@ type EventResource struct {
 func (e EventResource) Register (container *restful.Container) {
 	ws := new(restful.WebService)
 
-	ws.Path("/event").
+	ws.Path("/garage").
 	Consumes(restful.MIME_JSON, restful.MIME_JSON).
 	Produces(restful.MIME_JSON, restful.MIME_JSON)
 
 	ws.Route(ws.POST("geo/{email}/{latitude}/{longitude}").To(e.openGarageByLocation))
-	ws.Route(ws.POST("{email}").To(e.toggleGarage))
+	ws.Route(ws.POST("toggle").To(e.toggleGarage))
 	ws.Route(ws.GET("").To(e.findEvents))
 
 	container.Add(ws)
@@ -35,12 +35,13 @@ func (e EventResource) Register (container *restful.Container) {
 func (e EventResource) openGarageByLocation(request *restful.Request, response *restful.Response) {
 	email := request.PathParameter("email")
 	user := e.userDao.getUser(email)
+	timeWindows := e.userDao.getTimes(user)
 	log.Debugf("Found user, email:[%s]", user.Email)
 	latitude := request.PathParameter("latitude")
 	longitude := request.PathParameter("longitude")
 	log.Debugf("Request geolocation [%s, %s]", latitude, longitude)
 
-	if (timeToOpen(user)) {
+	if (timeToOpen(timeWindows)) {
 		arrivalDuration := e.distanceUtil.getArrivalTime(user, parseFloat64(latitude), parseFloat64(longitude))
 		if &arrivalDuration != nil && arrivalDuration.Seconds() < 60 {
 			log.Debug("Within 60 seconds of destination, opening door")

@@ -29,13 +29,16 @@ func main() {
 	}
 
 	defer db.Close()
-	_, err = db.Exec("CREATE TABLE IF NOT EXISTS user (email TEXT NOT NULL PRIMARY KEY, password TEXT, longitude REAL, latitude REAL, time DATETIME, duration INTEGER, distance INTEGER);")
-	if err != nil {
-		log.Fatalf("Could not create table user [%s]", err)
-	}
-	_, err = db.Exec("CREATE TABLE IF NOT EXISTS event (timestamp DATETIME  NOT NULL PRIMARY KEY, email TEXT);")
-	if err != nil {
-		log.Fatal("Could not create table event [%s]", err)
+	var errs []error = make([]error, 0)
+	// Create user table
+	_, err = db.Exec("CREATE TABLE IF NOT EXISTS user (email TEXT NOT NULL PRIMARY KEY, password TEXT, token TEXT, longitude REAL, latitude REAL);")
+	errs = append(errs, err)
+	_, err = db.Exec("CREATE TABLE IF NOT EXISTS user_time (email TEXT NOT NULL, time DATETIME, duration INTEGER);")
+	errs = append(errs, err)
+	if (len(errs) > 0) {
+		for _, err := range errs {
+			log.Errorf("%v", err)
+		}
 	}
 
 	userDao := UserDao{*db};
@@ -45,6 +48,13 @@ func main() {
 	wsContainer := restful.NewContainer()
 	u.Register(wsContainer)
 	e.Register(wsContainer)
+
+	cors := restful.CrossOriginResourceSharing{
+		ExposeHeaders:  []string{"X-My-Header"},
+		AllowedHeaders: []string{"Content-Type", "Accept"},
+		CookiesAllowed: false,
+		Container:      wsContainer}
+	wsContainer.Filter(cors.Filter)
 
 	server := &http.Server{Addr: ":"+strconv.Itoa(*portFlag), Handler: wsContainer}
 	log.Fatal(server.ListenAndServe())
