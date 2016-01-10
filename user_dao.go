@@ -28,19 +28,21 @@ func (u UserDao) getUser(email string) User {
 	log.Debugf("getting user for email [%s]", email)
 
 	tx,_ := u.db.Begin()
-	rows, _ := u.db.Query("select * from user where email = ?", email)
+	rows,_ := u.db.Query("select email, password, latitude, longitude, last_open from user where email = ?", email)
 	defer rows.Close()
-	var userEmail string
-	var password string
-	var latitude float64
-	var longitude float64
 
 	for (rows.Next()) {
-		rows.Scan(&userEmail, &password, &latitude, &longitude)
+		var userEmail, password string
+		var latitude, longitude float64
+		var lastOpen time.Time
+		rows.Scan(&userEmail, &password, &latitude, &longitude, &lastOpen)
+		log.Debugf("%v %v %v %v", userEmail, password, latitude, longitude)
+		user := User{Email: userEmail, Password: password, Latitude: latitude, Longitude: longitude, LastOpen: lastOpen}
+		log.Debugf("Found user %v", user)
+		return user
 	}
-	var user User = User{Email: userEmail, Password: password, Latitude: latitude, Longitude: longitude}
 	tx.Commit()
-	return user
+	return User{}
 }
 
 func (u UserDao) updateToken(user User) {
@@ -50,6 +52,22 @@ func (u UserDao) updateToken(user User) {
 	prepStmt,err := u.db.Prepare("update user set token = ? where email = ?;")
 	defer prepStmt.Close()
 	_,err = prepStmt.Exec(user.Token, user.Email)
+	if (err != nil) {
+		log.Error(err)
+		tx.Rollback()
+	} else {
+		tx.Commit()
+	}
+}
+
+func (u UserDao) updateLastOpen(user User) {
+	now := time.Now()
+	log.Debugf("Updating last_open [%v] token for email [%s]", now, user.Email)
+
+	tx,_ := u.db.Begin()
+	prepStmt,err := u.db.Prepare("update user set last_open = ? where email = ?;")
+	defer prepStmt.Close()
+	_,err = prepStmt.Exec(time.Now(), user.Email)
 	if (err != nil) {
 		log.Error(err)
 		tx.Rollback()
@@ -80,4 +98,14 @@ func (u UserDao) getTimes(user User) []TimeWindow {
 	}
 	tx.Commit()
 	return timeWindows
+}
+
+func (u UserDao) validToken(token string) bool {
+	log.Debugf("Checking valid token [%s]", token)
+
+	tx,_ := u.db.Begin()
+	rows, _ := u.db.Query("select 1 from user where token = ?", token)
+	defer rows.Close()
+	tx.Commit()
+	return rows.Next()
 }

@@ -5,13 +5,25 @@ import (
 )
 
 func timeToOpen(times []TimeWindow) bool {
-	hour, minute, second := time.Now().Clock()
-	now := time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), hour, minute, second, 0, time.Now().Location())
+	now := time.Now()
 	for _,timeWindow := range times {
 		openStartTime := startTime(timeWindow)
 		openEndTime := endTime(timeWindow)
 		log.Debugf("Open start time [%s], open end time [%s], now [%s]", openStartTime, openEndTime, now)
 		if (now.After(openStartTime) && now.Before(openEndTime)) {
+			return true;
+		}
+	}
+	return false;
+}
+func hasFiredOpenEvent(user User, times []TimeWindow) bool {
+	lastOpen := user.LastOpen
+	if (&lastOpen == nil) { return true }
+	for _,timeWindow := range times {
+		openStartTime := startTime(timeWindow)
+		openEndTime := endTime(timeWindow)
+		log.Debugf("Open start time [%s], open end time [%s], last_open time [%s]", openStartTime, openEndTime, user.LastOpen)
+		if (lastOpen.After(openStartTime) && lastOpen.Before(openEndTime)) {
 			return true;
 		}
 	}

@@ -2,13 +2,14 @@ package main
 import (
 	"github.com/emicklei/go-restful"
 	"github.com/satori/go.uuid"
-	"strings"
 	"github.com/Sirupsen/logrus"
+	"time"
 )
 
 type User struct {
 	Email, Password, Token string
 	Latitude, Longitude float64
+	LastOpen time.Time
 }
 
 type UserResource struct {
@@ -24,7 +25,6 @@ func (u UserResource) Register (container *restful.Container) {
 
 	ws.Route(ws.POST("register").To(u.createUser))
 	ws.Route(ws.POST("login").To(u.login))
-	ws.Route(ws.GET("{email}").To(u.getUser).Consumes("application/json").Produces("application/json"))
 	container.Add(ws)
 }
 
@@ -38,15 +38,12 @@ func (u UserResource) login(request *restful.Request, response *restful.Response
 	loginUser := new(User)
 	request.ReadEntity(&loginUser)
 	user := u.userDao.getUser(loginUser.Email)
-	if (strings.EqualFold(user.Password, loginUser.Password)) {
+	logrus.Debugf("Comparing passwords from db user [%s] to request user [%s]", user.Password, loginUser.Password)
+	if (user.Password == loginUser.Password) {
 		logrus.Debugf("Login successful for [%s]", user.Email)
 		user.Token = uuid.NewV4().String()
 		u.userDao.updateToken(user)
 	}
-}
-
-func (u UserResource) getUser(request *restful.Request, response *restful.Response) {
-	email := request.PathParameter("email")
-	user := u.userDao.getUser(email)
-	response.WriteEntity(user);
+	response.Header().Set("X-Auth-Token", user.Token)
+	logrus.Debugf("Setting X-Auth-Token to [%s]", user.Token)
 }

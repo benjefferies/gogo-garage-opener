@@ -17,6 +17,7 @@ var (
 	portFlag = flag.Int("p", port, "The port the server is listening on")
 	databaseFlag = flag.String("db", database, "The database file")
 	apiKeyFlag = flag.String("key", "", "The google maps API key (with distance matrix api enabled)")
+	userDao UserDao
 )
 
 func main() {
@@ -31,7 +32,7 @@ func main() {
 	defer db.Close()
 	var errs []error = make([]error, 0)
 	// Create user table
-	_, err = db.Exec("CREATE TABLE IF NOT EXISTS user (email TEXT NOT NULL PRIMARY KEY, password TEXT, token TEXT, longitude REAL, latitude REAL);")
+	_, err = db.Exec("CREATE TABLE IF NOT EXISTS user (email TEXT NOT NULL PRIMARY KEY, password TEXT, token TEXT, longitude REAL, latitude REAL, last_open DATETIME);")
 	errs = append(errs, err)
 	_, err = db.Exec("CREATE TABLE IF NOT EXISTS user_time (email TEXT NOT NULL, time DATETIME, duration INTEGER);")
 	errs = append(errs, err)
@@ -43,18 +44,19 @@ func main() {
 
 	userDao := UserDao{*db};
 	u := UserResource{userDao}
-	e := EventResource{eventDao:EventDao{*db}, userDao:userDao, doorController:DoorController{*relayPinFlag}, distanceUtil:DistanceUtil{apiKey:*apiKeyFlag}}
-
+	e := EventResource{userDao:userDao, doorController:DoorController{*relayPinFlag}, distanceUtil:DistanceUtil{apiKey:*apiKeyFlag}}
+	authFilter := AuthFilter{userDao: userDao}
 	wsContainer := restful.NewContainer()
 	u.Register(wsContainer)
 	e.Register(wsContainer)
 
 	cors := restful.CrossOriginResourceSharing{
-		ExposeHeaders:  []string{"X-My-Header"},
-		AllowedHeaders: []string{"Content-Type", "Accept"},
+		ExposeHeaders:  []string{"X-Auth-Token"},
+		AllowedHeaders: []string{"Content-Type", "Accept", "X-Auth-Token"},
 		CookiesAllowed: false,
 		Container:      wsContainer}
 	wsContainer.Filter(cors.Filter)
+	wsContainer.Filter(authFilter.tokenFilter)
 
 	server := &http.Server{Addr: ":"+strconv.Itoa(*portFlag), Handler: wsContainer}
 	log.Fatal(server.ListenAndServe())
