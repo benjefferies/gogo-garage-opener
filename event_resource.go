@@ -11,6 +11,21 @@ type EventResource struct {
 	distanceUtil DistanceUtil
 }
 
+func NewState(state int8) *State {
+	var description string
+	if (state == 0) {
+		description = "Door 1 - Closed"
+	} else {
+		description = "Door 1 - Open"
+	}
+	return &State{State: state, Description: description}
+}
+
+type State struct {
+	State int8
+	Description string
+}
+
 func (e EventResource) Register (container *restful.Container) {
 	ws := new(restful.WebService)
 
@@ -20,6 +35,7 @@ func (e EventResource) Register (container *restful.Container) {
 
 	ws.Route(ws.POST("geo/{email}/{latitude}/{longitude}").To(e.openGarageByLocation))
 	ws.Route(ws.POST("toggle").To(e.toggleGarage))
+	ws.Route(ws.GET("state").To(e.getState))
 
 	container.Add(ws)
 }
@@ -49,4 +65,10 @@ func (e EventResource) toggleGarage(request *restful.Request, response *restful.
 	log.Debugf("%s is opening garage", user.Email)
 	e.doorController.toggleDoor()
 	e.userDao.updateLastOpen(user)
+}
+
+func (e EventResource) getState(request *restful.Request, response *restful.Response) {
+	log.Debug("Getting garage state")
+	state := e.doorController.getDoorState()
+	response.WriteAsJson(*NewState(int8(state)))
 }

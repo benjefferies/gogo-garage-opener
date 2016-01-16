@@ -3,6 +3,8 @@ import (
 	"database/sql"
 	log "github.com/Sirupsen/logrus"
 	"time"
+	"crypto/sha256"
+	"fmt"
 )
 
 type UserDao struct {
@@ -10,12 +12,13 @@ type UserDao struct {
 }
 
 func (u UserDao) createUser(user User) {
-	log.Debugf("inserting user, email:[%s], password:[%s], longitude:[%s], latitude:[%s]", user.Email, user.Password, user.Latitude, user.Longitude,)
+	user.Password = hashedPassword(user)
+	log.Debugf("inserting user, email:[%s], password:[%s], longitude:[%s], latitude:[%s], approved:[%s]", user.Email, user.Password, user.Latitude, user.Longitude, user.Approved)
 
 	tx,_ := u.db.Begin()
-	prepStmt,err := u.db.Prepare("insert into user(email, password, longitude, latitude) values (?, ?, ?, ?)")
+	prepStmt,err := u.db.Prepare("insert into user(email, password, latitude, longitude, approved) values (?, ?, ?, ?, ?)")
 	defer prepStmt.Close()
-	_,err = prepStmt.Exec(user.Email, user.Password, user.Latitude, user.Longitude)
+	_,err = prepStmt.Exec(user.Email, user.Password, user.Latitude, user.Longitude, user.Approved)
 	if (err != nil) {
 		log.Error(err)
 		tx.Rollback()
@@ -28,16 +31,18 @@ func (u UserDao) getUser(email string) User {
 	log.Debugf("getting user for email [%s]", email)
 
 	tx,_ := u.db.Begin()
-	rows,_ := u.db.Query("select email, password, latitude, longitude, last_open from user where email = ?", email)
+	rows,_ := u.db.Query("select email, password, latitude, longitude, last_open, approved from user where email = ?", email)
 	defer rows.Close()
 
 	for (rows.Next()) {
 		var userEmail, password string
 		var latitude, longitude float64
 		var lastOpen time.Time
-		rows.Scan(&userEmail, &password, &latitude, &longitude, &lastOpen)
-		log.Debugf("%v %v %v %v", userEmail, password, latitude, longitude)
-		user := User{Email: userEmail, Password: password, Latitude: latitude, Longitude: longitude, LastOpen: lastOpen}
+		var approved bool
+
+		rows.Scan(&userEmail, &password, &latitude, &longitude, &lastOpen, &approved)
+		log.Debugf("%v %v %v %v %v %v", userEmail, password, latitude, longitude, lastOpen, approved)
+		user := User{Email: userEmail, Password: password, Latitude: latitude, Longitude: longitude, LastOpen: lastOpen, Approved: approved}
 		log.Debugf("Found user %v", user)
 		return user
 	}
@@ -108,4 +113,9 @@ func (u UserDao) validToken(token string) bool {
 	defer rows.Close()
 	tx.Commit()
 	return rows.Next()
+}
+
+func hashedPassword(user User) string {
+	hashedBytes := sha256.Sum256([]byte(user.Password))
+	return fmt.Sprintf("%s", hashedBytes)
 }
