@@ -45,14 +45,14 @@ func (u UserResource) login(request *restful.Request, response *restful.Response
 	request.ReadEntity(&loginUser)
 	user := u.userDao.getUser(loginUser.Email)
 	hashedPassword := hashedPassword(*loginUser)
-	log.Debugf("Comparing passwords from db user [%s] to request user [%s]", user.Password, hashedPassword)
 	if (user.Password == hashedPassword) {
-		log.Debugf("Login successful for [%s]", user.Email)
+		log.Infof("Login successful for [%s]", user.Email)
 		user.Token = uuid.NewV4().String()
 		u.userDao.updateToken(user)
 		response.Header().Set("X-Auth-Token", user.Token)
 		log.Debugf("Setting X-Auth-Token to [%s]", user.Token)
 	} else {
+		log.Infof("Login failed for [%s]", user.Email)
 		response.WriteErrorString(401, "401: Not Authorized")
 	}
 }

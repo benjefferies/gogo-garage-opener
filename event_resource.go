@@ -44,7 +44,7 @@ func (e EventResource) openGarageByLocation(request *restful.Request, response *
 	email := request.PathParameter("email")
 	user := e.userDao.getUser(email)
 	timeWindows := e.userDao.getTimes(user)
-	log.Debugf("Found user, email:[%s]", user.Email)
+	log.Debugf("Found user, email:[%s]", email)
 	latitude := request.PathParameter("latitude")
 	longitude := request.PathParameter("longitude")
 	log.Debugf("Request geolocation [%s, %s]", latitude, longitude)
@@ -52,7 +52,7 @@ func (e EventResource) openGarageByLocation(request *restful.Request, response *
 	if (timeToOpen(timeWindows) && !hasFiredOpenEvent(user, timeWindows)) {
 		arrivalDuration := e.distanceUtil.getArrivalTime(user, parseFloat64(latitude), parseFloat64(longitude))
 		if &arrivalDuration != nil && arrivalDuration.Seconds() < 60 {
-			log.Debug("Within 60 seconds of destination, opening door")
+			log.Infof("Within 60 seconds of destination, opening door for user %s", email)
 			e.doorController.toggleDoor()
 			e.userDao.updateLastOpen(user)
 		}
@@ -62,7 +62,7 @@ func (e EventResource) openGarageByLocation(request *restful.Request, response *
 func (e EventResource) toggleGarage(request *restful.Request, response *restful.Response) {
 	email := request.PathParameter("email")
 	user := e.userDao.getUser(email)
-	log.Debugf("%s is opening garage", user.Email)
+	log.Infof("%s is opening or closing garage", email)
 	e.doorController.toggleDoor()
 	e.userDao.updateLastOpen(user)
 }

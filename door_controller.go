@@ -28,9 +28,10 @@ func (c DoorController) toggleDoor() {
 
 	// Toggle pin on/off
 	pin.Toggle()
+	log.Infof("Toggle relay switch on")
 	time.Sleep(time.Millisecond * 500)
 	pin.Toggle()
-	log.Debugf("Toggled pin %d on/off", c.relayPin)
+	log.Infof("Toggle relay switch off")
 }
 
 func (c DoorController) getDoorState() rpio.State {
@@ -50,6 +51,6 @@ func (c DoorController) getDoorState() rpio.State {
 
 	// Read state
 	state := pin.Read()
-	log.Debugf("Sensor reading state", state)
+	log.Infof("Sensor reading state: %s", state)
 	return state
 }

@@ -7,6 +7,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"flag"
 	"strconv"
+	"os"
 )
 
 const database = "gogo-garage-opener.db"
@@ -24,7 +25,7 @@ var (
 
 func main() {
 	flag.Parse()
-	log.SetLevel(log.DebugLevel)
+	log.SetLevel(log.InfoLevel)
 	logConfiguration()
 	db, err := sql.Open("sqlite3", *databaseFlag)
 	if err != nil {
@@ -74,7 +75,8 @@ func setupTables(db sql.DB) {
 
 func createUser(userDao UserDao) {
 	if ((*email != "" && password != nil) && (email != nil && *password != "")) {
-		log.Debugf("Creating account email:%s", *email)
 		userDao.createUser(User{Email: *email, Password: *password, Approved: true})
+		log.Infof("Created account email:%s. Exiting...", *email)
+		os.Exit(0)
 	}
 }
