@@ -5,6 +5,7 @@ import (
 	"time"
 	"crypto/sha256"
 	"fmt"
+	"strings"
 )
 
 type UserDao struct {
@@ -18,7 +19,7 @@ func (u UserDao) createUser(user User) {
 	tx,_ := u.db.Begin()
 	prepStmt,err := u.db.Prepare("insert into user(email, password, latitude, longitude, approved) values (?, ?, ?, ?, ?)")
 	defer prepStmt.Close()
-	_,err = prepStmt.Exec(user.Email, user.Password, user.Latitude, user.Longitude, user.Approved)
+	_,err = prepStmt.Exec(strings.ToLower(user.Email), user.Password, user.Latitude, user.Longitude, user.Approved)
 	if (err != nil) {
 		log.Error(err)
 		tx.Rollback()
@@ -31,7 +32,7 @@ func (u UserDao) getUser(email string) User {
 	log.Debugf("getting user for email [%s]", email)
 
 	tx,_ := u.db.Begin()
-	rows,_ := u.db.Query("select email, password, latitude, longitude, last_open, approved from user where email = ?", email)
+	rows,_ := u.db.Query("select lower(email), password, latitude, longitude, last_open, approved from user where lower(email) = lower(?)", email)
 	defer rows.Close()
 
 	for (rows.Next()) {

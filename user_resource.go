@@ -24,7 +24,6 @@ func (u UserResource) Register (container *restful.Container) {
 	Consumes(restful.MIME_JSON, restful.MIME_JSON).
 	Produces(restful.MIME_JSON, restful.MIME_JSON)
 
-	ws.Route(ws.POST("register").To(u.CreateUser))
 	ws.Route(ws.POST("login").To(u.login))
 	container.Add(ws)
 }
@@ -33,11 +32,7 @@ func (u UserResource) CreateUser(request *restful.Request, response *restful.Res
 	user := new(User)
 	request.ReadEntity(&user)
 	user.Approved = false
-	u.createUser(user)
-}
-
-func (u UserResource) createUser(user *User) {
-//	u.userDao.createUser(*user)
+	u.userDao.createUser(*user)
 }
 
 func (u UserResource) login(request *restful.Request, response *restful.Response) {
@@ -53,6 +48,6 @@ func (u UserResource) login(request *restful.Request, response *restful.Response
 		log.Debugf("Setting X-Auth-Token to [%s]", user.Token)
 	} else {
 		log.Infof("Login failed for [%s]", user.Email)
-		response.WriteErrorString(401, "401: Not Authorized")
+		response.WriteErrorString(400, "400: Incorrect username or passwords")
 	}
 }
