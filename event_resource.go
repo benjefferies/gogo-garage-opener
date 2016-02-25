@@ -33,7 +33,7 @@ func (e EventResource) Register (container *restful.Container) {
 	Consumes(restful.MIME_JSON, restful.MIME_JSON).
 	Produces(restful.MIME_JSON, restful.MIME_JSON)
 
-	ws.Route(ws.POST("geo/{email}/{latitude}/{longitude}").To(e.openGarageByLocation))
+	ws.Route(ws.POST("geo/{latitude}/{longitude}").To(e.openGarageByLocation))
 	ws.Route(ws.POST("toggle").To(e.toggleGarage))
 	ws.Route(ws.GET("state").To(e.getState))
 
@@ -41,6 +41,7 @@ func (e EventResource) Register (container *restful.Container) {
 }
 
 func (e EventResource) openGarageByLocation(request *restful.Request, response *restful.Response) {
+	// TODO reverse lookup email using token?
 	email := request.PathParameter("email")
 	user := e.userDao.getUser(email)
 	timeWindows := e.userDao.getTimes(user)
