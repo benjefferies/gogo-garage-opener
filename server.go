@@ -40,11 +40,11 @@ func main() {
 	createUser(userDao)
 	u := UserResource{userDao}
 
-	e := EventResource{userDao:userDao, doorController:DoorController{relayPin: *relayPinFlag, contactSwitchPin: *contactSwitchPinFlag}, distanceUtil:DistanceUtil{apiKey:*apiKeyFlag}}
+	e := EventResource{userDao:userDao, doorController:DoorController{relayPin: *relayPinFlag, contactSwitchPin: *contactSwitchPinFlag}, distanceUtil:DistanceCalculator{apiKey:*apiKeyFlag}}
 	authFilter := AuthFilter{userDao: userDao}
 	wsContainer := restful.NewContainer()
-	u.Register(wsContainer)
-	e.Register(wsContainer)
+	u.register(wsContainer)
+	e.register(wsContainer)
 
 	cors := restful.CrossOriginResourceSharing{
 		ExposeHeaders:  []string{"X-Auth-Token"},
@@ -68,8 +68,6 @@ func logConfiguration() {
 func setupTables(db sql.DB) {
 	// Create user table
 	_, err := db.Exec("CREATE TABLE IF NOT EXISTS user (email TEXT NOT NULL PRIMARY KEY, password TEXT, token TEXT, longitude REAL, latitude REAL, last_open DATETIME, approved BOOLEAN);")
-	if (err != nil) {log.Fatalf("%v", err)}
-	_, err = db.Exec("CREATE TABLE IF NOT EXISTS user_time (email TEXT NOT NULL, time DATETIME, duration INTEGER);")
 	if (err != nil) {log.Fatalf("%v", err)}
 }
 

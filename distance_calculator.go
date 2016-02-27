@@ -1,6 +1,5 @@
 package main
 import (
-	"strconv"
 	log "github.com/Sirupsen/logrus"
 	"googlemaps.github.io/maps"
 	"golang.org/x/net/context"
@@ -8,19 +7,11 @@ import (
 	"fmt"
 )
 
-type DistanceUtil struct {
+type DistanceCalculator struct {
 	apiKey string
 }
 
-func parseFloat64(floatValue string) float64 {
-	float, err := strconv.ParseFloat(floatValue, 64)
-	if (err != nil) {
-		log.Error(err)
-	}
-	return float
-}
-
-func (du DistanceUtil) getArrivalTime(user User, destLat, destLon float64) time.Duration {
+func (du DistanceCalculator) getTimeToArrive(user User, destLat, destLon float64) time.Duration {
 	garageLat, garageLon := user.Latitude, user.Longitude
 	c, err := maps.NewClient(maps.WithAPIKey(du.apiKey))
 	if err != nil {

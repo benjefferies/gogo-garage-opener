@@ -3,8 +3,6 @@ import (
 	"database/sql"
 	log "github.com/Sirupsen/logrus"
 	"time"
-	"crypto/sha256"
-	"fmt"
 	"strings"
 )
 
@@ -13,7 +11,6 @@ type UserDao struct {
 }
 
 func (u UserDao) createUser(user User) {
-	user.Password = hashedPassword(user)
 	log.Debugf("inserting user, email:[%s], password:[%s], longitude:[%s], latitude:[%s], approved:[%s]", user.Email, user.Password, user.Latitude, user.Longitude, user.Approved)
 
 	tx,_ := u.db.Begin()
@@ -28,13 +25,31 @@ func (u UserDao) createUser(user User) {
 	}
 }
 
-func (u UserDao) getUser(email string) User {
+func (u UserDao) getUserByEmail(email string) User {
 	log.Debugf("getting user for email [%s]", email)
 
 	tx,_ := u.db.Begin()
 	rows,_ := u.db.Query("select lower(email), password, latitude, longitude, last_open, approved from user where lower(email) = lower(?)", email)
 	defer rows.Close()
 
+	user := getUserFromRows(rows);
+	tx.Commit()
+	return user
+}
+
+func (u UserDao) getUserByToken(token string) User {
+	log.Debugf("getting user for token [%s]", token)
+
+	tx,_ := u.db.Begin()
+	rows,_ := u.db.Query("select lower(email), password, latitude, longitude, last_open, approved from user where token = ?", token)
+	defer rows.Close()
+
+	user := getUserFromRows(rows);
+	tx.Commit()
+	return user
+}
+
+func getUserFromRows(rows *sql.Rows) User {
 	for (rows.Next()) {
 		var userEmail, password string
 		var latitude, longitude float64
@@ -47,11 +62,10 @@ func (u UserDao) getUser(email string) User {
 		log.Debugf("Found user %v", user)
 		return user
 	}
-	tx.Commit()
 	return User{}
 }
 
-func (u UserDao) updateToken(user User) {
+func (u UserDao) setToken(user User) {
 	log.Debugf("Updating UUID [%s] token for email [%s]", user.Token, user.Email)
 
 	tx,_ := u.db.Begin()
@@ -82,31 +96,7 @@ func (u UserDao) updateLastOpen(user User) {
 	}
 }
 
-type TimeWindow struct {
-
-	Time time.Time
-	DurationWindow time.Duration
-
-}
-
-func (u UserDao) getTimes(user User) []TimeWindow {
-	log.Debugf("Getting times for [%s]", user.Email)
-
-	tx,_ := u.db.Begin()
-	rows, _ := u.db.Query("select * from user_time where email = ?", user.Email)
-	defer rows.Close()
-
-	var timeWindows []TimeWindow = make([]TimeWindow, 1)
-	for (rows.Next()) {
-		time := TimeWindow{}
-		rows.Scan(&time.Time, &time.DurationWindow)
-		timeWindows = append(timeWindows, time)
-	}
-	tx.Commit()
-	return timeWindows
-}
-
-func (u UserDao) validToken(token string) bool {
+func (u UserDao) tokenExists(token string) bool {
 	log.Debugf("Checking valid token [%s]", token)
 
 	tx,_ := u.db.Begin()
@@ -114,9 +104,4 @@ func (u UserDao) validToken(token string) bool {
 	defer rows.Close()
 	tx.Commit()
 	return rows.Next()
-}
-
-func hashedPassword(user User) string {
-	hashedBytes := sha256.Sum256([]byte(user.Password))
-	return fmt.Sprintf("%s", hashedBytes)
 }
