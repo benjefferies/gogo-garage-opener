@@ -52,7 +52,6 @@ func parseFloat64(floatValue string) float64 {
 func (e EventResource) openGarageByLocation(request *restful.Request, response *restful.Response) {
 	token := request.HeaderParameter("X-Auth-Token")
 	user := e.userDao.getUserByToken(token)
-	log.Debugf("Found user, email:[%s]", email)
 	latitude := request.PathParameter("latitude")
 	longitude := request.PathParameter("longitude")
 	arrival := request.PathParameter("arrival")
@@ -63,7 +62,9 @@ func (e EventResource) openGarageByLocation(request *restful.Request, response *
 		log.Infof("Within %s seconds of destination, opening door for user %s", arrival, email)
 		e.doorController.toggleDoor()
 		e.userDao.updateLastOpen(user)
+		response.WriteHeader(202)
 	}
+	response.WriteHeader(204)
 }
 
 func (e EventResource) toggleGarage(request *restful.Request, response *restful.Response) {
@@ -72,6 +73,7 @@ func (e EventResource) toggleGarage(request *restful.Request, response *restful.
 	log.Infof("%s is opening or closing garage", user.Email)
 	e.doorController.toggleDoor()
 	e.userDao.updateLastOpen(user)
+	response.WriteHeader(202)
 }
 
 func (e EventResource) getState(request *restful.Request, response *restful.Response) {

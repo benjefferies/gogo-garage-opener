@@ -27,6 +27,7 @@ func (u UserResource) register(container *restful.Container) {
 	Produces(restful.MIME_JSON)
 
 	ws.Route(ws.POST("login").To(u.login))
+	ws.Route(ws.POST("garage/{latitude}/{longitude}").To(u.setLocation))
 	container.Add(ws)
 }
 
@@ -53,6 +54,17 @@ func (u UserResource) login(request *restful.Request, response *restful.Response
 		log.Infof("Login failed for [%s]", user.Email)
 		response.WriteErrorString(400, "400: Incorrect username or passwords")
 	}
+}
+
+func (u UserResource) setLocation(request *restful.Request, response *restful.Response) {
+	token := request.HeaderParameter("X-Auth-Token")
+	user := u.userDao.getUserByToken(token)
+	latitude := request.PathParameter("latitude")
+	longitude := request.PathParameter("longitude")
+	user.Latitude = parseFloat64(latitude)
+	user.Longitude = parseFloat64(longitude)
+	u.userDao.setLocation(user)
+	response.WriteHeader(204)
 }
 
 func hashedPassword(user User) string {

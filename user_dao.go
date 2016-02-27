@@ -57,7 +57,6 @@ func getUserFromRows(rows *sql.Rows) User {
 		var approved bool
 
 		rows.Scan(&userEmail, &password, &latitude, &longitude, &lastOpen, &approved)
-		log.Debugf("%v %v %v %v %v %v", userEmail, password, latitude, longitude, lastOpen, approved)
 		user := User{Email: userEmail, Password: password, Latitude: latitude, Longitude: longitude, LastOpen: lastOpen, Approved: approved}
 		log.Debugf("Found user %v", user)
 		return user
@@ -66,7 +65,7 @@ func getUserFromRows(rows *sql.Rows) User {
 }
 
 func (u UserDao) setToken(user User) {
-	log.Debugf("Updating UUID [%s] token for email [%s]", user.Token, user.Email)
+	log.Debugf("Updating token [%s]  for email [%s]", user.Token, user.Email)
 
 	tx,_ := u.db.Begin()
 	prepStmt,err := u.db.Prepare("update user set token = ? where email = ?;")
@@ -80,9 +79,24 @@ func (u UserDao) setToken(user User) {
 	}
 }
 
+func (u UserDao) setLocation(user User) {
+	log.Debugf("Updating location [%s],[%s] for email [%s]", user.Latitude, user.Longitude, user.Email)
+
+	tx,_ := u.db.Begin()
+	prepStmt,err := u.db.Prepare("update user set latitude = ?, longitude = ? where email = ?;")
+	defer prepStmt.Close()
+	_,err = prepStmt.Exec(user.Latitude, user.Longitude, user.Email)
+	if (err != nil) {
+		log.Error(err)
+		tx.Rollback()
+	} else {
+		tx.Commit()
+	}
+}
+
 func (u UserDao) updateLastOpen(user User) {
 	now := time.Now()
-	log.Debugf("Updating last_open [%v] token for email [%s]", now, user.Email)
+	log.Debugf("Updating last_open [%v] for email [%s]", now, user.Email)
 
 	tx,_ := u.db.Begin()
 	prepStmt,err := u.db.Prepare("update user set last_open = ? where email = ?;")
