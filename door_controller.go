@@ -1,13 +1,13 @@
 package main
 
 import (
-	"github.com/stianeikeland/go-rpio"
 	log "github.com/Sirupsen/logrus"
+	"github.com/stianeikeland/go-rpio"
 	"time"
 )
 
 type DoorController struct {
-	relayPin int
+	relayPin         int
 	contactSwitchPin int
 }
 
