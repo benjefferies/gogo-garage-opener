@@ -53,10 +53,10 @@ func (e GarageDoorResource) useOneTimePin(request *restful.Request, response *re
 			response.WriteHeaderAndEntity(401, "Pin has already been used")
 			return
 		}
-		//e.doorController.toggleDoor()
+		e.doorController.toggleDoor()
 		response.WriteHeaderAndEntity(202, fmt.Sprintf("Opening garage, it will close in %v seconds",
 			TIME_TO_CLOSE.Seconds()))
-		//go e.closeGarage(pin)
+		go e.closeGarage(pin)
 	}
 }
 
