@@ -19,7 +19,7 @@ func (a AuthFilter) tokenFilter(req *restful.Request, resp *restful.Response, ch
 	allowedPaths := strings.HasPrefix(urlPath, "/user/login") || strings.HasPrefix(urlPath, "/garage/one-time-pin") ||
 		(strings.HasPrefix(urlPath, "/user/one-time-pin") && req.Request.Method == "GET")
 	if !tokenExists && !allowedPaths {
-		log.Infof("Not authorized request from [%s]", authToken)
+		log.Infof("Not authorized request from [%s]", req.Request.RemoteAddr)
 		resp.WriteErrorString(401, "401: Not Authorized")
 		return
 	} else {

@@ -73,7 +73,7 @@ func (u UserResource) login(request *restful.Request, response *restful.Response
 	loginUser := new(User)
 	request.ReadEntity(&loginUser)
 	user := u.userDao.getUserByEmail(loginUser.Email)
-	if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginUser.Password)) != nil {
+	if bcrypt.CompareHashAndPassword([]byte(loginUser.Password), []byte(user.Password)) != nil {
 		log.Infof("Login successful for [%s]", user.Email)
 		user.Token = uuid.NewV4().String()
 		u.userDao.setToken(user)

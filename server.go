@@ -21,6 +21,7 @@ var (
 	databaseFlag         = flag.String("db", database, "The database file")
 	email                = flag.String("email", "", "Specify email to create account")
 	password             = flag.String("password", "", "Specify email to create account")
+	noop                 = flag.Bool("noop", false, "Noop can be ran without the raspberry pi")
 )
 
 func main() {
@@ -41,7 +42,8 @@ func main() {
 	pinDao := PinDao{*db}
 	u := UserResource{userDao: userDao, pinDao: pinDao}
 
-	e := GarageDoorResource{userDao: userDao, pinDao: pinDao, doorController: DoorController{relayPin: *relayPinFlag, contactSwitchPin: *contactSwitchPinFlag}}
+
+	e := GarageDoorResource{userDao: userDao, pinDao: pinDao, doorController: getDoorController(*noop)}
 	authFilter := AuthFilter{userDao: userDao}
 	wsContainer := restful.NewContainer()
 	u.register(wsContainer)
@@ -81,8 +83,22 @@ func setupTables(db sql.DB) {
 
 func createUser(userDao UserDao) {
 	if (*email != "" && password != nil) && (email != nil && *password != "") {
-		userDao.createUser(User{Email: *email, Password: *password})
+		user, err := User{Email: *email, Password: *password}.hashPassword()
+		if err != nil {
+			log.Fatalf("Failed to create user: %s" , email)
+		}
+		userDao.createUser(user)
 		log.Infof("Created account email:%s. Exiting...", *email)
 		os.Exit(0)
 	}
+}
+
+func getDoorController(noop bool) DoorController {
+	var doorController DoorController
+	if (noop) {
+		doorController = NoopDoorController{}
+	} else {
+		doorController = RaspberryPiDoorController{relayPin: *relayPinFlag, contactSwitchPin: *contactSwitchPinFlag}
+	}
+	return doorController
 }

@@ -1,14 +1,14 @@
 package main
 
-func newState(state int8) *State {
+func newState(state DoorState) *State {
 	var description string = "Open"
-	if state == 0 {
+	if state == closed {
 		description = "Closed"
 	}
 	return &State{State: state, Description: description}
 }
 
 type State struct {
-	State       int8
+	State       DoorState
 	Description string
 }
