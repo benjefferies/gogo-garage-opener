@@ -7,7 +7,6 @@ import (
 	"github.com/emicklei/go-restful"
 	_ "github.com/mattn/go-sqlite3"
 	"net/http"
-	"os"
 	"strconv"
 )
 
@@ -38,27 +37,28 @@ func main() {
 	setupTables(*db)
 
 	userDao := UserDao{*db}
-	createUser(userDao)
-	pinDao := PinDao{*db}
-	u := UserResource{userDao: userDao, pinDao: pinDao}
+	created := createUser(userDao)
+	if (!created) {
+		pinDao := PinDao{*db}
+		u := UserResource{userDao: userDao, pinDao: pinDao}
 
+		e := GarageDoorResource{userDao: userDao, pinDao: pinDao, doorController: getDoorController(*noop)}
+		authFilter := AuthFilter{userDao: userDao}
+		wsContainer := restful.NewContainer()
+		u.register(wsContainer)
+		e.register(wsContainer)
 
-	e := GarageDoorResource{userDao: userDao, pinDao: pinDao, doorController: getDoorController(*noop)}
-	authFilter := AuthFilter{userDao: userDao}
-	wsContainer := restful.NewContainer()
-	u.register(wsContainer)
-	e.register(wsContainer)
+		cors := restful.CrossOriginResourceSharing{
+			ExposeHeaders:  []string{"X-Auth-Token"},
+			AllowedHeaders: []string{"Content-Type", "Accept", "X-Auth-Token"},
+			CookiesAllowed: false,
+			Container:      wsContainer}
+		wsContainer.Filter(cors.Filter)
+		wsContainer.Filter(authFilter.tokenFilter)
 
-	cors := restful.CrossOriginResourceSharing{
-		ExposeHeaders:  []string{"X-Auth-Token"},
-		AllowedHeaders: []string{"Content-Type", "Accept", "X-Auth-Token"},
-		CookiesAllowed: false,
-		Container:      wsContainer}
-	wsContainer.Filter(cors.Filter)
-	wsContainer.Filter(authFilter.tokenFilter)
-
-	server := &http.Server{Addr: ":" + strconv.Itoa(*portFlag), Handler: wsContainer}
-	log.Fatal(server.ListenAndServe())
+		server := &http.Server{Addr: ":" + strconv.Itoa(*portFlag), Handler: wsContainer}
+		log.Fatal(server.ListenAndServe())
+	}
 }
 
 func logConfiguration() {
@@ -81,7 +81,7 @@ func setupTables(db sql.DB) {
 	}
 }
 
-func createUser(userDao UserDao) {
+func createUser(userDao UserDao) bool {
 	if (*email != "" && password != nil) && (email != nil && *password != "") {
 		user, err := User{Email: *email, Password: *password}.hashPassword()
 		if err != nil {
@@ -89,13 +89,15 @@ func createUser(userDao UserDao) {
 		}
 		userDao.createUser(user)
 		log.Infof("Created account email:%s. Exiting...", *email)
-		os.Exit(0)
+		return true
 	}
+	return false
 }
 
 func getDoorController(noop bool) DoorController {
 	var doorController DoorController
 	if (noop) {
+		log.Info("Running in noop mode")
 		doorController = NoopDoorController{}
 	} else {
 		doorController = RaspberryPiDoorController{relayPin: *relayPinFlag, contactSwitchPin: *contactSwitchPinFlag}

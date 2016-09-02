@@ -23,8 +23,8 @@ func (e GarageDoorResource) register(container *restful.Container) {
 		Produces(restful.MIME_JSON)
 
 	ws.Route(ws.POST("toggle").To(e.toggleGarage))
-	ws.Route(ws.POST("one-time-pin/{oneTimePin}").Consumes("application/x-www-form-urlencoded").To(e.useOneTimePin))
 	ws.Route(ws.GET("state").To(e.getState))
+	ws.Route(ws.POST("one-time-pin/{oneTimePin}").Consumes("application/x-www-form-urlencoded").To(e.useOneTimePin))
 
 	container.Add(ws)
 }

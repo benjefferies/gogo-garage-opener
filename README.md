@@ -26,5 +26,4 @@ To use a one time pin go to http://localhost:8080/user/one-time-pin/060cd65f-f70
 
 #### Future
 
-* Add tests
-* Open garage door via location i.e. Automatically open garage within 100 metres of your garage
+* Open garage door via location i.e. Automatically open garage within 100 metres of your garage. I have found a nice way to do this using [Automate](http://llamalab.com/automate/). I can upload a template of a flow if anyone would find it useful.
