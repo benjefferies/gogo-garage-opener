@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/benjefferies/gogo-garage-opener.svg?branch=master)](https://travis-ci.org/benjefferies/gogo-garage-opener)
 # gogo-garage-opener
 Go implementation of a Raspberry Pi garage door opener
 

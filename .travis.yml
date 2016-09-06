@@ -1,0 +1,20 @@
+
+language: go
+
+go:
+ - 1.5.3
+ - tip
+
+matrix:
+  fast_finish: true
+
+env:
+  global:
+    - PATH=$HOME/gopath/bin:$PATH
+
+install:
+ - go get -t -v ./...
+
+script:
+ - go build ./...
+ - go test -v ./...
