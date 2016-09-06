@@ -9,11 +9,16 @@ type NoopDoorController struct {
 }
 
 
-func (c NoopDoorController) toggleDoor() {
+func (this NoopDoorController) toggleDoor() {
 	log.Info("Noop toggleDoor")
 }
 
-func (c NoopDoorController) getDoorState() DoorState {
+func (this NoopDoorController) getDoorState() DoorState {
 	log.Info("Noop getDoorState")
 	return closed
+}
+
+
+func (this NoopDoorController) close() {
+	log.Info("Noop close")
 }

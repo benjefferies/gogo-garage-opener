@@ -30,24 +30,24 @@ type UserResource struct {
 	pinDao PinDao
 }
 
-func (u UserResource) register(container *restful.Container) {
+func (this UserResource) register(container *restful.Container) {
 	ws := new(restful.WebService)
 
 	ws.Path("/user").
 		Consumes(restful.MIME_JSON).
 		Produces(restful.MIME_JSON)
 
-	ws.Route(ws.POST("login").To(u.login))
-	ws.Route(ws.POST("one-time-pin").To(u.oneTimePin))
-	ws.Route(ws.GET("one-time-pin/{oneTimePin}").To(u.useOneTimePin))
+	ws.Route(ws.POST("login").To(this.login))
+	ws.Route(ws.POST("one-time-pin").To(this.oneTimePin))
+	ws.Route(ws.GET("one-time-pin/{oneTimePin}").To(this.useOneTimePin))
 	container.Add(ws)
 }
 
-func (u UserResource) oneTimePin(request *restful.Request, response *restful.Response)  {
+func (this UserResource) oneTimePin(request *restful.Request, response *restful.Response)  {
 	token := request.HeaderParameter("X-Auth-Token")
-	user := u.userDao.getUserByToken(token)
+	user := this.userDao.getUserByToken(token)
 	log.Debugf("%s is creating new one time pin", user.Email)
-	pin, err := u.pinDao.newOneTimePin(user)
+	pin, err := this.pinDao.newOneTimePin(user)
 	if err != nil {
 		log.WithError(err).Error("Could not create one time pin")
 		response.WriteHeader(500)
@@ -63,20 +63,20 @@ func (u UserResource) oneTimePin(request *restful.Request, response *restful.Res
 	response.Write(json)
 }
 
-func (u UserResource) useOneTimePin(request *restful.Request, response *restful.Response)  {
+func (this UserResource) useOneTimePin(request *restful.Request, response *restful.Response)  {
 	oneTimePin := request.PathParameter("oneTimePin")
 	response.ResponseWriter.WriteHeader(200)
 	response.ResponseWriter.Write([]byte(fmt.Sprintf(ONE_TIME_PIN_USE, TIME_TO_CLOSE.Seconds(), oneTimePin)))
 }
 
-func (u UserResource) login(request *restful.Request, response *restful.Response) {
+func (this UserResource) login(request *restful.Request, response *restful.Response) {
 	loginUser := new(User)
 	request.ReadEntity(&loginUser)
-	user := u.userDao.getUserByEmail(loginUser.Email)
+	user := this.userDao.getUserByEmail(loginUser.Email)
 	if bcrypt.CompareHashAndPassword([]byte(loginUser.Password), []byte(user.Password)) != nil {
 		log.Infof("Login successful for [%s]", user.Email)
 		user.Token = uuid.NewV4().String()
-		u.userDao.setToken(user)
+		this.userDao.setToken(user)
 		response.Header().Set("X-Auth-Token", user.Token)
 		log.Debugf("Setting X-Auth-Token to [%s]", user.Token)
 	} else {

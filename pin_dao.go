@@ -12,13 +12,13 @@ type PinDao struct {
 	db sql.DB
 }
 
-func (p PinDao) newOneTimePin(user User) (string, error) {
+func (this PinDao) newOneTimePin(user User) (string, error) {
 	pin := shortid.MustGenerate()
 	now := time.Now()
 	log.Debugf("inserting one time pin:[%s], created_by:[%s], created:[%s]", pin, user.Email, now.Local())
 
-	tx, _ := p.db.Begin()
-	prepStmt, err := p.db.Prepare("insert into one_time_pin(pin, created_by, created) values (?, ?, ?)")
+	tx, _ := this.db.Begin()
+	prepStmt, err := this.db.Prepare("insert into one_time_pin(pin, created_by, created) values (?, ?, ?)")
 	defer prepStmt.Close()
 	_, err = prepStmt.Exec(pin, user.getEmail(), now.Unix())
 	if err != nil {
@@ -29,12 +29,12 @@ func (p PinDao) newOneTimePin(user User) (string, error) {
 	return pin, err
 }
 
-func (p PinDao) use(pin string) error {
+func (this PinDao) use(pin string) error {
 	now := time.Now()
 	log.Debugf("using one time pin: [%s] at: [%s]", pin, now.Local())
 
-	tx, _ := p.db.Begin()
-	prepStmt, err := p.db.Prepare("update one_time_pin set used = ? where pin = ? and used is null")
+	tx, _ := this.db.Begin()
+	prepStmt, err := this.db.Prepare("update one_time_pin set used = ? where pin = ? and used is null")
 	defer prepStmt.Close()
 	resp, err := prepStmt.Exec(now.Unix(), pin)
 	if err != nil {
@@ -50,11 +50,11 @@ func (p PinDao) use(pin string) error {
 	return err
 }
 
-func (p PinDao) getPinUsedDate(pin string) (int64, error) {
+func (this PinDao) getPinUsedDate(pin string) (int64, error) {
 	log.Debugf("Getting used date for pin: [%s]", pin)
 
-	tx, _ := p.db.Begin()
-	prepStmt, err := p.db.Prepare("select used from one_time_pin where pin = ?")
+	tx, _ := this.db.Begin()
+	prepStmt, err := this.db.Prepare("select used from one_time_pin where pin = ?")
 	defer prepStmt.Close()
 	row := prepStmt.QueryRow(pin)
 	var usedDate int64

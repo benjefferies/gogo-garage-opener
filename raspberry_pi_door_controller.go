@@ -8,47 +8,39 @@ import (
 
 
 type RaspberryPiDoorController struct {
-	relayPin         int
-	contactSwitchPin int
+	relayPin         rpio.Pin
+	contactSwitchPin rpio.Pin
 }
 
-func (c RaspberryPiDoorController) toggleDoor() {
-
-	log.Debugf("Using relay pin %d to toggle relay", c.relayPin)
-	pin := rpio.Pin(c.relayPin)
+func NewRaspberryPiDoorController(relayPinId int, contactSwitchPinId int) RaspberryPiDoorController {
 	// Open and map memory to access gpio, check for errors
 	if err := rpio.Open(); err != nil {
 		log.Error(err)
 	}
+	relayPin := rpio.Pin(relayPinId)
+	contactSwitchPin := rpio.Pin(contactSwitchPinId)
+	relayPin.Output()
+	contactSwitchPin.Input()
+	return RaspberryPiDoorController{relayPin: relayPin, contactSwitchPin: contactSwitchPin}
+}
 
-	// Unmap gpio memory when done
-	defer rpio.Close()
-
-	// Set pin to output mode
-	pin.Output()
-
+func (this RaspberryPiDoorController) toggleDoor() {
 	// Toggle pin on/off
-	pin.Toggle()
+	this.relayPin.Toggle()
 	log.Infof("Toggle relay switch on")
 	time.Sleep(time.Millisecond * 500)
-	pin.Toggle()
+	this.relayPin.Toggle()
 	log.Infof("Toggle relay switch off")
 }
 
-func (c RaspberryPiDoorController) getDoorState() DoorState {
+func (this RaspberryPiDoorController) getDoorState() DoorState {
 
-	log.Debugf("Using pin %d to read contact switch pin", c.contactSwitchPin)
-	pin := rpio.Pin(c.contactSwitchPin)
+	log.Debugf("Using pin %d to read contact switch pin", this.contactSwitchPin)
+	pin := rpio.Pin(this.contactSwitchPin)
 	// Open and map memory to access gpio, check for errors
 	if err := rpio.Open(); err != nil {
 		log.Error(err)
 	}
-
-	// Unmap gpio memory when done
-	defer rpio.Close()
-
-	// Set pin to input mode
-	pin.Input()
 
 	// Read state
 	state := pin.Read()
@@ -58,5 +50,12 @@ func (c RaspberryPiDoorController) getDoorState() DoorState {
 		return closed
 	} else {
 		return open
+	}
+}
+
+func (this RaspberryPiDoorController) close() {
+	err := rpio.Close()
+	if err != nil {
+		log.WithError(err).Error("Could not close pins")
 	}
 }

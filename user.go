@@ -9,12 +9,12 @@ type User struct {
 	Email, Password, Token string
 }
 
-func (u User) hashPassword() (User, error) {
-	passwordBytes := []byte(u.Password)
+func (this User) hashPassword() (User, error) {
+	passwordBytes := []byte(this.Password)
 	password, err := bcrypt.GenerateFromPassword(passwordBytes, bcrypt.DefaultCost)
-	return User{Email: u.Email, Password: string(password), Token: u.Password}, err
+	return User{Email: this.Email, Password: string(password), Token: this.Password}, err
 }
 
-func (u User) getEmail() string {
-	return strings.ToLower(u.Email)
+func (this User) getEmail() string {
+	return strings.ToLower(this.Email)
 }

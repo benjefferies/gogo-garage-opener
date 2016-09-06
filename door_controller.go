@@ -10,4 +10,5 @@ const (
 type DoorController interface {
 	toggleDoor()
 	getDoorState() DoorState
+	close()
 }

@@ -40,13 +40,15 @@ func main() {
 	created := createUser(userDao)
 	if (!created) {
 		pinDao := PinDao{*db}
-		u := UserResource{userDao: userDao, pinDao: pinDao}
+		userResource := UserResource{userDao: userDao, pinDao: pinDao}
+		doorController := getDoorController(*noop)
 
-		e := GarageDoorResource{userDao: userDao, pinDao: pinDao, doorController: getDoorController(*noop)}
+		defer doorController.close()
+		garageDoorResource := GarageDoorResource{userDao: userDao, pinDao: pinDao, doorController: doorController}
 		authFilter := AuthFilter{userDao: userDao}
 		wsContainer := restful.NewContainer()
-		u.register(wsContainer)
-		e.register(wsContainer)
+		userResource.register(wsContainer)
+		garageDoorResource.register(wsContainer)
 
 		cors := restful.CrossOriginResourceSharing{
 			ExposeHeaders:  []string{"X-Auth-Token"},
@@ -63,6 +65,7 @@ func main() {
 
 func logConfiguration() {
 	log.Debugf("Relay pin %d", *relayPinFlag)
+	log.Debugf("Sensor pin %d", *contactSwitchPinFlag)
 	log.Debugf("Database file %s", *databaseFlag)
 	log.Debugf("Webserver port %d", *portFlag)
 }
@@ -100,7 +103,7 @@ func getDoorController(noop bool) DoorController {
 		log.Info("Running in noop mode")
 		doorController = NoopDoorController{}
 	} else {
-		doorController = RaspberryPiDoorController{relayPin: *relayPinFlag, contactSwitchPin: *contactSwitchPinFlag}
+		doorController = NewRaspberryPiDoorController(*relayPinFlag, *contactSwitchPinFlag)
 	}
 	return doorController
 }
