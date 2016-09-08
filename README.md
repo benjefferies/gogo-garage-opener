@@ -55,11 +55,11 @@ Wiring up the magnetic switch
 
 1. Fix the magnet to the garage door
 1. Fix the sensor to the garage door frame
-1. Connect up a (brown) GPIO wire to pin 18 which is a GPIO pin. This will be used in "in" mode to read from the sensor
+1. Connect up a (brown) GPIO wire to pin 15 which is a GPIO pin. This will be used in "in" mode to read from the sensor
 1. Connect up a (red) GPIO wire to pin 9 which a ground
 1. Connect up the (red) ground GPIO pin 9 wire to a terminal strip on the breadboard
-1. Connect up the (brown/blue) GPIO pin 18 wire to a different terminal strip on the breadboard
-1. Connect one wire of the magnetic switch to the terminal strip for GPIO pin 9 and the other to the terminal strip for GPIO pin 18
+1. Connect up the (brown/blue) GPIO pin 15 wire to a different terminal strip on the breadboard
+1. Connect one wire of the magnetic switch to the terminal strip for GPIO pin 9 and the other to the terminal strip for GPIO pin 15
 
 ![Pins left view](./img/pin2.jpg)
 ![Breadboard with magnetic switch wiring](img/breadboard.jpg)
