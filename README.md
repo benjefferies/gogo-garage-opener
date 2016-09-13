@@ -13,7 +13,7 @@ Also see [gogo-garage-opener-ui](https://github.com/benjefferies/gogo-garage-ope
 ##### Prerequisites
 
 * Garage door opener I have an [EcoStar Liftronic 500](https://www.amazon.co.uk/gp/product/B00520C7M2/ref=oh_aui_detailpage_o03_s00?ie=UTF8&psc=1) but any model which will allow you to hook up a switch will work
-* Raspberry Pi (I am using model B)
+* Raspberry Pi (I am using model B) wired up to internet or local network
 * [Relay switch](https://www.amazon.co.uk/gp/product/B00J4FTWO2/ref=oh_aui_detailpage_o00_s00?ie=UTF8&psc=1)
 * Normal open [Magnetic switch](https://www.amazon.co.uk/gp/product/B0056K5ZC2/ref=oh_aui_detailpage_o00_s00?ie=UTF8&psc=1)
 * Small [solderless breadboard](https://www.amazon.co.uk/gp/product/B0040Z4QGA/ref=oh_aui_detailpage_o09_s00?ie=UTF8&psc=1)
