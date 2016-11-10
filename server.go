@@ -8,6 +8,8 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"net/http"
 	"strconv"
+	"time"
+	"github.com/sourcegraph/go-ses"
 )
 
 const database = "gogo-garage-opener.db"
@@ -21,6 +23,7 @@ var (
 	email                = flag.String("email", "", "Specify email to create account")
 	password             = flag.String("password", "", "Specify email to create account")
 	noop                 = flag.Bool("noop", false, "Noop can be ran without the raspberry pi")
+	notification = flag.Duration("notification", time.Second * 0, "The time to wait in minutes before sending a warning email")
 )
 
 func main() {
@@ -59,7 +62,33 @@ func main() {
 		wsContainer.Filter(authFilter.tokenFilter)
 
 		server := &http.Server{Addr: ":" + strconv.Itoa(*portFlag), Handler: wsContainer}
+		if *notification > time.Second * 0 {
+			go monitorDoor(doorController, userDao)
+		}
 		log.Fatal(server.ListenAndServe())
+	}
+}
+
+func monitorDoor(doorController DoorController, userDao UserDao) {
+	for true {
+		var lastOpened time.Time
+		if doorController.getDoorState() == open {
+			now := time.Now()
+			if now.Sub(lastOpened) > *notification * time.Minute {
+				sendMail(userDao)
+			}
+			lastOpened = time.Now()
+		}
+		time.Sleep(*notification)
+	}
+}
+
+func sendMail(userDao UserDao) {
+	for _, email := range userDao.getUserEmails() {
+		_, err := ses.EnvConfig.SendEmail("garagedoor@mygaragedoor.tech", email, "Door left open", "")
+		if err != nil {
+			log.Errorf("Error sending email: %s\n", err)
+		}
 	}
 }
 

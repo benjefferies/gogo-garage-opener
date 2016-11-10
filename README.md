@@ -86,6 +86,12 @@ Note. If you are considering making the application available over the internet 
 
 To use a one time pin go to http://localhost:8080/user/one-time-pin/abcd1234. The pin at the end is the generated pin, once the open button has been pressed the pin will be marked as used.
 
+##### Open garage door notification
+The application can be configured to notify users which have accounts via their email address if the garage door has been left open for a configurable period.
+The command line argument `-notification=15m` configures the app to notify all users if the door has been left open longer than the configuration duration.
+It uses [AWS SES](https://aws.amazon.com/documentation/ses/) as an SMTP service for sending the emails.
+To configure the application to use your SES account you will need to set the environmental variables $AWS_ACCESS_KEY_ID, $AWS_SECRET_KEY and $AWS_SES_ENDPOINT environmental variables. See [go-ses](https://github.com/sourcegraph/go-ses#running-tests)
+
 #### Future
 
 * Open garage door via location i.e. Automatically open garage within 100 metres of your garage. I have found a nice way to do this using [Automate](http://llamalab.com/automate/). I can upload a template of a flow if anyone would find it useful.

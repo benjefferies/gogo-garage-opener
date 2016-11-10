@@ -37,7 +37,7 @@ func (this RaspberryPiDoorController) getDoorState() DoorState {
 
 	log.Debugf("Using pin %d to read contact switch pin", this.contactSwitchPin)
 	pin := rpio.Pin(this.contactSwitchPin)
-	// Open and map memory to access gpio, check for errors
+	// Open and map  memory to access gpio, check for errors
 	if err := rpio.Open(); err != nil {
 		log.Error(err)
 	}

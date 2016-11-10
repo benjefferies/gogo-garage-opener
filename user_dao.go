@@ -48,6 +48,21 @@ func (this UserDao) getUserByToken(token string) User {
 	return user
 }
 
+func (this UserDao) getUserEmails() []string {
+	tx, _ := this.db.Begin()
+	rows, _ := this.db.Query("select lower(email) from user")
+	defer rows.Close()
+	var emails []string
+	for rows.Next() {
+		var userEmail string
+		rows.Scan(&userEmail)
+		log.Debugf("Found user %v", emails)
+		emails = append(emails, userEmail)
+	}
+	tx.Commit()
+	return emails
+}
+
 func getUserFromRows(rows *sql.Rows) User {
 	for rows.Next() {
 		var userEmail, password string
