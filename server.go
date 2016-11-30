@@ -84,8 +84,8 @@ func monitorDoor(doorController DoorController, userDao UserDao) {
 }
 
 func sendMail(userDao UserDao) {
-	for _, email := range userDao.getUserEmails() {
-		_, err := ses.EnvConfig.SendEmail("garagedoor@mygaragedoor.tech", email, "Door left open", "")
+	for _, email := range userDao.getSubscribedUserEmails() {
+		_, err := ses.EnvConfig.SendEmail("garagedoor@mygaragedoor.tech", email, "Door left open", "Door left open")
 		if err != nil {
 			log.Errorf("Error sending email: %s\n", err)
 		}
@@ -101,7 +101,7 @@ func logConfiguration() {
 
 func setupTables(db sql.DB) {
 	// Create user table
-	_, err := db.Exec("CREATE TABLE IF NOT EXISTS user (email TEXT NOT NULL PRIMARY KEY, password TEXT, token TEXT);")
+	_, err := db.Exec("CREATE TABLE IF NOT EXISTS user (email TEXT NOT NULL PRIMARY KEY, password TEXT, token TEXT, subscribed BOOLEAN DEFAULT 0);")
 	if err != nil {
 		log.WithError(err).Fatal("Could not create user table")
 	}

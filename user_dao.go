@@ -48,9 +48,9 @@ func (this UserDao) getUserByToken(token string) User {
 	return user
 }
 
-func (this UserDao) getUserEmails() []string {
+func (this UserDao) getSubscribedUserEmails() []string {
 	tx, _ := this.db.Begin()
-	rows, _ := this.db.Query("select lower(email) from user")
+	rows, _ := this.db.Query("select lower(email) from user where subscribed = 1")
 	defer rows.Close()
 	var emails []string
 	for rows.Next() {
