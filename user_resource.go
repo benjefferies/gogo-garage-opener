@@ -55,12 +55,12 @@ func (this UserResource) oneTimePin(request *restful.Request, response *restful.
 	pinMap := map[string]interface{}{
 		"pin": pin,
 	}
-	json, err := json.Marshal(pinMap)
+	payload, err := json.Marshal(pinMap)
 	if err != nil {
 		log.WithError(err).Error("Could not marshell one time pin")
 		response.WriteHeader(500)
 	}
-	response.Write(json)
+	response.Write(payload)
 }
 
 func (this UserResource) useOneTimePin(request *restful.Request, response *restful.Response)  {
@@ -73,14 +73,19 @@ func (this UserResource) login(request *restful.Request, response *restful.Respo
 	loginUser := new(User)
 	request.ReadEntity(&loginUser)
 	user := this.userDao.getUserByEmail(loginUser.Email)
-	if bcrypt.CompareHashAndPassword([]byte(loginUser.Password), []byte(user.Password)) != nil {
+	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginUser.Password))
+	if err == bcrypt.ErrMismatchedHashAndPassword {
+		log.Infof("Login failed for [%s]", user.Email)
+		response.WriteErrorString(400, "400: Incorrect username or passwords")
+	} else if err != nil {
+		log.Infof("Login failed for [%s]", user.Email)
+		log.Errorf("%v", err)
+		response.WriteErrorString(400, "400: Incorrect username or passwords")
+	} else {
 		log.Infof("Login successful for [%s]", user.Email)
 		user.Token = uuid.NewV4().String()
 		this.userDao.setToken(user)
 		response.Header().Set("X-Auth-Token", user.Token)
 		log.Debugf("Setting X-Auth-Token to [%s]", user.Token)
-	} else {
-		log.Infof("Login failed for [%s]", user.Email)
-		response.WriteErrorString(400, "400: Incorrect username or passwords")
 	}
 }

@@ -59,8 +59,22 @@ func TestLogin(t *testing.T) {
 		Post("http://localhost:8080/user/login")
 
 	assert.Nil(t, err, "Not expecting an error")
-	assert.Equal(t, response.StatusCode(), 200, "Expecting OK http status")
-	assert.Equal(t, response.Header().Get("X-Auth-Token"), getToken(t), "Token should be in X-Auth-Token header")
+	assert.Equal(t, 200, response.StatusCode(), "Expecting OK http status")
+	assert.Equal(t, getToken(t), response.Header().Get("X-Auth-Token"), "Token should be in X-Auth-Token header")
+}
+
+func TestLoginWithIncorrectPassword(t *testing.T) {
+	user := map[string]interface{}{
+		"Email": "test@example.com",
+		"Password": "wrong_password",
+	}
+
+	response, err := resty.R().
+		SetBody(user).
+		Post("http://localhost:8080/user/login")
+
+	assert.Nil(t, err, "Not expecting an error")
+	assert.Equal(t, 400, response.StatusCode(), "Expecting 400 http status")
 }
 
 func TestNewOneTimePin(t *testing.T) {
