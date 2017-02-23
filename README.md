@@ -26,13 +26,13 @@ Garage Opener for iPhone, Android App implemented using ionics framework ([sourc
 ##### To build
 
 ###### <a name="software">Software</a>
-The build framework uses docker to make the process easier. With some fiddling about you can build it natively on the Raspberry Pi or on your developer machine.
+The build framework uses docker to make the process easier. With some fiddling about you can build it natively on the Raspberry Pi or on your development machine.
 
-**Note.** If compiling manually rather than using docker you will need to install an arm gcc on your developer machine compile the source. The docker build takes care of all of this.
+**Note.** If compiling manually rather than using docker you will need to install an arm gcc on your development machine compile the source. The docker build takes care of all of this.
 
 **Building using docker**
 
-1. Open up your command line tool and navigate to the project
+1. Open up your command line tool and navigate to the project on your development machine
 1. Compile the project by running`docker build . --tag gogo-garage-opener-builder && docker run --rm -v "$PWD":/go/src/gogo-garage-opener -w /go/src/gogo-garage-opener gogo-garage-opener-builder:latest` (tested on linux)
 1. You should have a binary file called `gogo-garage-opener` in the project directory
 1. Copy the binary file `gogo-garage-opener` to your Raspberry Pi
