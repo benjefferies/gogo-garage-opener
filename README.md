@@ -4,10 +4,13 @@ Go implementation of a Raspberry Pi garage door opener
 
 #### Features
 
-* Open garage door using [gogo-garage-opener-ui](https://github.com/benjefferies/gogo-garage-opener-ui)
-* Generate one time pins to allow someone temporary access to your garage i.e. A delivery man
+* Open garage door using a [mobile app](#apps)
+* Generate one time pins to allow someone temporary access to your garage i.e. A delivery man or a friend or a family member.
 
-Also see [gogo-garage-opener-ui](https://github.com/benjefferies/gogo-garage-opener-ui) implemented using ionics framework
+#### Apps
+[Garage Opener on Play Store](https://play.google.com/store/apps/details?id=uk.echosoft.garageopener&hl=en_GB) ([source](https://github.com/benjefferies/gogo-garage-opener-android))
+
+Garage Opener for iPhone, Android App implemented using ionics framework ([source](https://github.com/benjefferies/gogo-garage-opener-ui))
 
 #### Guide
 ##### Prerequisites
@@ -23,11 +26,44 @@ Also see [gogo-garage-opener-ui](https://github.com/benjefferies/gogo-garage-ope
 ##### To build
 
 ###### <a name="software">Software</a>
-The build framework uses docker to make the process easier although with some fiddling about you can build it natively but you will need to compile the source with an arm gcc
+The build framework uses docker to make the process easier. With some fiddling about you can build it natively on the Raspberry Pi or on your developer machine.
+
+**Note.** If compiling manually rather than using docker you will need to install an arm gcc on your developer machine compile the source. The docker build takes care of all of this.
+
+**Building using docker**
 
 1. Open up your command line tool and navigate to the project
 1. Compile the project by running`docker build . --tag gogo-garage-opener-builder && docker run --rm -v "$PWD":/go/src/gogo-garage-opener -w /go/src/gogo-garage-opener gogo-garage-opener-builder:latest` (tested on linux)
 1. You should have a binary file called `gogo-garage-opener` in the project directory
+1. Copy the binary file `gogo-garage-opener` to your Raspberry Pi
+
+##### Creating a user
+
+To use [gogo-garage-opener-ui](https://github.com/benjefferies/gogo-garage-opener-ui) or use the APIs you will need to create an account
+
+1. Ensure you have [built the binary](#software)
+1. Run the app with `--email` and `--password` arguments e.g. `./gogo-garage-opener --email benjefferies@example.com --password secret`
+1. The application will exit with a message `Created account email:benjefferies@example.com. Exiting...`
+
+##### Running
+
+1. Ensure you have completed the [Hardware set up](#hardware)
+1. Run the application as root `sudo nohup ./gogo-garage-opener -s 15 -r 18 &`
+    * nohup will redirect the output from the application to a log file called nohup.out
+    * The -s argument tells the application which gpio pin the magnetic switch is hooked up to
+    * The -r argument tells the application which gpio pin the relay is hooked up to
+    
+**Note.** If you are considering making the application available over the internet you will want your credentials to be encrypted over SSL, this can be achieved with a reverse proxy such as ngnix or apache2 with the correct mod.
+
+##### Use one time pin
+
+To use a one time pin go to http://localhost:8080/user/one-time-pin/abcd1234. The pin at the end is the generated pin, once the open button has been pressed the pin will be marked as used.
+
+##### Open garage door notification
+The application can be configured to notify users which have accounts via their email address if the garage door has been left open for a configurable period.
+The command line argument `-notification=15m` configures the app to notify all users if the door has been left open longer than the configuration duration.
+It uses [AWS SES](https://aws.amazon.com/documentation/ses/) as an SMTP service for sending the emails.
+To configure the application to use your SES account you will need to set the environmental variables $AWS_ACCESS_KEY_ID, $AWS_SECRET_KEY and $AWS_SES_ENDPOINT environmental variables. See [go-ses](https://github.com/sourcegraph/go-ses#running-tests)
 
 ###### Hardware
 
@@ -63,34 +99,6 @@ Wiring up the magnetic switch
 
 ![Pins left view](./img/pin2.jpg)
 ![Breadboard with magnetic switch wiring](img/breadboard.jpg)
-
-##### Create user
-
-To use [gogo-garage-opener-ui](https://github.com/benjefferies/gogo-garage-opener-ui) or use the APIs you will need to create an account
-
-1. Ensure you have [built the binary](#software)
-1. Run the app with `--email` and `--password` arguments e.g. `./gogo-garage-opener --email benjefferies@example.com --password secret`
-1. The application will exit with a message `Created account email:benjefferies@example.com. Exiting...`
-
-##### Running
-
-1. Copy the binary produced by the build across to your Raspberry Pi.
-1. Run the application as root `sudo nohup ./gogo-garage-opener -s 15 -r 18 &`
-    * nohup will redirect the output from the application to a log file called nohup.out
-    * The -s argument tells the application which gpio pin the magnetic switch is hooked up to
-    * The -r argument tells the application which gpio pin the relay is hooked up to
-    
-Note. If you are considering making the application available over the internet you will want your credentials to be encrypted, this can be achieved with a reverse proxy such as ngnix or apache2 with the correct mod.
-
-##### Use one time pin
-
-To use a one time pin go to http://localhost:8080/user/one-time-pin/abcd1234. The pin at the end is the generated pin, once the open button has been pressed the pin will be marked as used.
-
-##### Open garage door notification
-The application can be configured to notify users which have accounts via their email address if the garage door has been left open for a configurable period.
-The command line argument `-notification=15m` configures the app to notify all users if the door has been left open longer than the configuration duration.
-It uses [AWS SES](https://aws.amazon.com/documentation/ses/) as an SMTP service for sending the emails.
-To configure the application to use your SES account you will need to set the environmental variables $AWS_ACCESS_KEY_ID, $AWS_SECRET_KEY and $AWS_SES_ENDPOINT environmental variables. See [go-ses](https://github.com/sourcegraph/go-ses#running-tests)
 
 #### Future
 
