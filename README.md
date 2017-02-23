@@ -67,7 +67,7 @@ To configure the application to use your SES account you will need to set the en
 
 ###### Hardware
 
-I will describe how to set up your Raspberry Pi and the peripherals referring to the GPIO pins set up my Raspberry PI. Check that they are the same for your version.
+I will describe how to set up your Raspberry Pi and the peripherals referring to the GPIO pins set up my Raspberry PI. Check that they are the same for your version. [GPIO documentation](https://www.raspberrypi.org/documentation/usage/gpio/)
 
 Wiring up the relay
 
