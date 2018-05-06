@@ -83,7 +83,7 @@ func (this UserResource) login(request *restful.Request, response *restful.Respo
 		response.WriteErrorString(400, "400: Incorrect username or passwords")
 	} else {
 		log.Infof("Login successful for [%s]", user.Email)
-		user.Token = uuid.NewV4().String()
+		user.Token = uuid.Must(uuid.NewV4()).String()
 		this.userDao.setToken(user)
 		response.Header().Set("X-Auth-Token", user.Token)
 		log.Debugf("Setting X-Auth-Token to [%s]", user.Token)
