@@ -63,21 +63,32 @@ func main() {
 
 		server := &http.Server{Addr: ":" + strconv.Itoa(*portFlag), Handler: wsContainer}
 		if *notification > time.Second * 0 {
+			log.Infof("Monitoring garage door")
 			go monitorDoor(doorController, userDao)
+		} else {
+			log.Infof("Not monitoring garage door")
 		}
 		log.Fatal(server.ListenAndServe())
 	}
 }
 
 func monitorDoor(doorController DoorController, userDao UserDao) {
+	nilTime := time.Time{}
+	lastOpened := nilTime
 	for true {
-		var lastOpened time.Time
 		if doorController.getDoorState() == open {
+			if lastOpened == nilTime {
+				log.Infof("Setting lastOpened")
+				lastOpened = time.Now()
+			}
 			now := time.Now()
-			if now.Sub(lastOpened) > *notification * time.Minute {
+			openTooLong := lastOpened.Add(*notification)
+			if now.After(openTooLong) {
+				log.Infof("Sending emails for open notification")
 				sendMail(userDao)
 			}
-			lastOpened = time.Now()
+		} else {
+			lastOpened = nilTime
 		}
 		time.Sleep(*notification)
 	}
