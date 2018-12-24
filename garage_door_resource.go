@@ -37,7 +37,7 @@ func (this GarageDoorResource) useOneTimePin(request *restful.Request, response 
 		log.Infof("Pin has already been used")
 		response.WriteHeaderAndEntity(401, "Pin has already been used")
 	} else if err != nil {
-		log.WithError(err).Error("Could not get pin used date for [%s]", oneTimePin)
+		log.WithError(err).Errorf("Could not get pin used date for [%s]", oneTimePin)
 		response.WriteHeaderAndEntity(500, "Failed to open garage")
 	} else {
 		err = this.pinDao.use(oneTimePin)

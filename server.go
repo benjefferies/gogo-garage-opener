@@ -128,7 +128,7 @@ func createUser(userDao UserDao) bool {
 	if (*email != "" && password != nil) && (email != nil && *password != "") {
 		user, err := User{Email: *email, Password: *password}.hashPassword()
 		if err != nil {
-			log.Fatalf("Failed to create user: %s" , email)
+			log.WithError(err).Fatalf("Failed to create user: %s" , *email)
 		}
 		userDao.createUser(user)
 		log.Infof("Created account email:%s. Exiting...", *email)

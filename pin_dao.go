@@ -60,7 +60,7 @@ func (this PinDao) getPinUsedDate(pin string) (int64, error) {
 	var usedDate int64
 	row.Scan(&usedDate)
 	if err != nil {
-		log.WithError(err).Error("Could not get pin used date for [%s]", pin)
+		log.WithError(err).Errorf("Could not get pin used date for [%s]", pin)
 		tx.Rollback()
 	} else {
 		tx.Commit()
