@@ -1,0 +1,16 @@
+[Unit]
+Description=gogo-garage-opener
+After=network.target
+After=syslog.target
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+# Start main service
+ExecStart=/opt/gogo-garage-opener/gogo-garage-opener -s 15 -r 18 -notification=5m -db=/var/gogo-garage-opener/gogo-garage-opener.db
+Restart=always
+Type=forking
+Environment="AWS_ACCESS_KEY_ID=$ACCESS"
+Environment="AWS_SECRET_KEY=$SECRET"
+Environment="AWS_SES_ENDPOINT=https://email.us-west-2.amazonaws.com
