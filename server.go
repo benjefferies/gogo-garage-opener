@@ -112,7 +112,7 @@ func logConfiguration() {
 
 func setupTables(db sql.DB) {
 	// Create user table
-	_, err := db.Exec("CREATE TABLE IF NOT EXISTS user (email TEXT NOT NULL PRIMARY KEY, password TEXT, token TEXT, subscribed BOOLEAN DEFAULT 0);")
+	_, err := db.Exec("CREATE TABLE IF NOT EXISTS user (email TEXT NOT NULL PRIMARY KEY, password TEXT, token TEXT, subscribed BOOLEAN DEFAULT 1);")
 	if err != nil {
 		log.WithError(err).Fatal("Could not create user table")
 	}
