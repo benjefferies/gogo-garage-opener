@@ -1,11 +1,13 @@
 package main
 
 import (
+	"strings"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/emicklei/go-restful"
-	"strings"
 )
 
+// AuthFilter intercepts and checks auth token
 type AuthFilter struct {
 	userDao UserDao
 }
@@ -22,8 +24,7 @@ func (a AuthFilter) tokenFilter(req *restful.Request, resp *restful.Response, ch
 		log.Infof("Not authorized request from [%s]", req.Request.RemoteAddr)
 		resp.WriteErrorString(401, "401: Not Authorized")
 		return
-	} else {
-		log.Debugf("Authorized request from [%s]", req.Request.RemoteAddr)
 	}
+	log.Debugf("Authorized request from [%s]", req.Request.RemoteAddr)
 	chain.ProcessFilter(req, resp)
 }

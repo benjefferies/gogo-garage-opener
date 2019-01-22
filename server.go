@@ -3,12 +3,13 @@ package main
 import (
 	"database/sql"
 	"flag"
-	log "github.com/Sirupsen/logrus"
-	"github.com/emicklei/go-restful"
-	_ "github.com/mattn/go-sqlite3"
 	"net/http"
 	"strconv"
 	"time"
+
+	log "github.com/Sirupsen/logrus"
+	"github.com/emicklei/go-restful"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/sourcegraph/go-ses"
 )
 
@@ -23,7 +24,7 @@ var (
 	email                = flag.String("email", "", "Specify email to create account")
 	password             = flag.String("password", "", "Specify email to create account")
 	noop                 = flag.Bool("noop", false, "Noop can be ran without the raspberry pi")
-	notification = flag.Duration("notification", time.Second * 0, "The time to wait in minutes before sending a warning email")
+	notification         = flag.Duration("notification", time.Second*0, "The time to wait in minutes before sending a warning email")
 )
 
 func main() {
@@ -37,12 +38,12 @@ func main() {
 
 	defer db.Close()
 
-	setupTables(*db)
+	setupTables(db)
 
-	userDao := UserDao{*db}
+	userDao := UserDao{db}
 	created := createUser(userDao)
-	if (!created) {
-		pinDao := PinDao{*db}
+	if !created {
+		pinDao := PinDao{db}
 		userResource := UserResource{userDao: userDao, pinDao: pinDao}
 		doorController := getDoorController(*noop)
 
@@ -62,7 +63,7 @@ func main() {
 		wsContainer.Filter(authFilter.tokenFilter)
 
 		server := &http.Server{Addr: ":" + strconv.Itoa(*portFlag), Handler: wsContainer}
-		if *notification > time.Second * 0 {
+		if *notification > time.Second*0 {
 			log.Infof("Monitoring garage door")
 			go monitorDoor(doorController, userDao)
 		} else {
@@ -110,7 +111,7 @@ func logConfiguration() {
 	log.Debugf("Webserver port %d", *portFlag)
 }
 
-func setupTables(db sql.DB) {
+func setupTables(db *sql.DB) {
 	// Create user table
 	_, err := db.Exec("CREATE TABLE IF NOT EXISTS user (email TEXT NOT NULL PRIMARY KEY, password TEXT, token TEXT, subscribed BOOLEAN DEFAULT 1);")
 	if err != nil {
@@ -128,7 +129,7 @@ func createUser(userDao UserDao) bool {
 	if (*email != "" && password != nil) && (email != nil && *password != "") {
 		user, err := User{Email: *email, Password: *password}.hashPassword()
 		if err != nil {
-			log.WithError(err).Fatalf("Failed to create user: %s" , *email)
+			log.WithError(err).Fatalf("Failed to create user: %s", *email)
 		}
 		userDao.createUser(user)
 		log.Infof("Created account email:%s. Exiting...", *email)
@@ -139,7 +140,7 @@ func createUser(userDao UserDao) bool {
 
 func getDoorController(noop bool) DoorController {
 	var doorController DoorController
-	if (noop) {
+	if noop {
 		log.Info("Running in noop mode")
 		doorController = NoopDoorController{}
 	} else {

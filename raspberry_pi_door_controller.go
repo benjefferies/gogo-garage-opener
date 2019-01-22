@@ -1,42 +1,46 @@
 package main
 
 import (
+	"time"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/stianeikeland/go-rpio"
-	"time"
 )
 
-
+// RaspberryPiDoorController the controller for accessing the garage door
 type RaspberryPiDoorController struct {
 	relayPin         rpio.Pin
 	contactSwitchPin rpio.Pin
 }
 
-func NewRaspberryPiDoorController(relayPinId int, contactSwitchPinId int) RaspberryPiDoorController {
+// NewRaspberryPiDoorController Constructor for RaspberryPiDoorController
+func NewRaspberryPiDoorController(relayPinID int, contactSwitchPinID int) RaspberryPiDoorController {
 	// Open and map memory to access gpio, check for errors
 	if err := rpio.Open(); err != nil {
 		log.Error(err)
 	}
-	relayPin := rpio.Pin(relayPinId)
-	contactSwitchPin := rpio.Pin(contactSwitchPinId)
+	relayPin := rpio.Pin(relayPinID)
+	contactSwitchPin := rpio.Pin(contactSwitchPinID)
 	relayPin.Output()
 	contactSwitchPin.Input()
 	return RaspberryPiDoorController{relayPin: relayPin, contactSwitchPin: contactSwitchPin}
 }
 
-func (this RaspberryPiDoorController) toggleDoor() {
+// Open or close garage door
+func (raspberryPiDoorController RaspberryPiDoorController) toggleDoor() {
 	// Toggle pin on/off
-	this.relayPin.Toggle()
+	raspberryPiDoorController.relayPin.Toggle()
 	log.Infof("Toggle relay switch on")
 	time.Sleep(time.Millisecond * 500)
-	this.relayPin.Toggle()
+	raspberryPiDoorController.relayPin.Toggle()
 	log.Infof("Toggle relay switch off")
 }
 
-func (this RaspberryPiDoorController) getDoorState() DoorState {
+// Get the state of the garage door
+func (raspberryPiDoorController RaspberryPiDoorController) getDoorState() DoorState {
 
-	log.Debugf("Using pin %d to read contact switch pin", this.contactSwitchPin)
-	pin := rpio.Pin(this.contactSwitchPin)
+	log.Debugf("Using pin %d to read contact switch pin", raspberryPiDoorController.contactSwitchPin)
+	pin := rpio.Pin(raspberryPiDoorController.contactSwitchPin)
 	// Open and map  memory to access gpio, check for errors
 	if err := rpio.Open(); err != nil {
 		log.Error(err)
@@ -46,14 +50,14 @@ func (this RaspberryPiDoorController) getDoorState() DoorState {
 	state := pin.Read()
 	log.Infof("Sensor reading state: %v", state)
 	doorState := int8(state)
-	if (doorState == int8(closed)) {
+	if doorState == int8(closed) {
 		return closed
-	} else {
-		return open
 	}
+	return open
 }
 
-func (this RaspberryPiDoorController) close() {
+// Close rpio
+func (raspberryPiDoorController RaspberryPiDoorController) close() {
 	err := rpio.Close()
 	if err != nil {
 		log.WithError(err).Error("Could not close pins")

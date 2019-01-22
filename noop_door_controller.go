@@ -4,21 +4,22 @@ import (
 	log "github.com/Sirupsen/logrus"
 )
 
+// NoopDoorController for testing
 type NoopDoorController struct {
-
 }
 
-
-func (this NoopDoorController) toggleDoor() {
+// toggleDoor is noop for testing
+func (noopDoorController NoopDoorController) toggleDoor() {
 	log.Info("Noop toggleDoor")
 }
 
-func (this NoopDoorController) getDoorState() DoorState {
+// getDoorState is noop for testing always returning closed
+func (noopDoorController NoopDoorController) getDoorState() DoorState {
 	log.Info("Noop getDoorState")
 	return closed
 }
 
-
-func (this NoopDoorController) close() {
+// close is noop for testing
+func (noopDoorController NoopDoorController) close() {
 	log.Info("Noop close")
 }

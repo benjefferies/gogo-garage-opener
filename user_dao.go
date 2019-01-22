@@ -2,18 +2,20 @@ package main
 
 import (
 	"database/sql"
+
 	log "github.com/Sirupsen/logrus"
 )
 
+// UserDao data access for users
 type UserDao struct {
-	db sql.DB
+	db *sql.DB
 }
 
-func (this UserDao) createUser(user User) {
+func (userDao UserDao) createUser(user User) {
 	log.Debugf("inserting user, email:[%s], password:[%s]", user.Email, user.Password)
 
-	tx, _ := this.db.Begin()
-	prepStmt, err := this.db.Prepare("insert into user(email, password) values (?, ?)")
+	tx, _ := userDao.db.Begin()
+	prepStmt, err := userDao.db.Prepare("insert into user(email, password) values (?, ?)")
 	defer prepStmt.Close()
 	_, err = prepStmt.Exec(user.getEmail(), user.Password)
 	if err != nil {
@@ -24,11 +26,11 @@ func (this UserDao) createUser(user User) {
 	}
 }
 
-func (this UserDao) getUserByEmail(email string) User {
+func (userDao UserDao) getUserByEmail(email string) User {
 	log.Debugf("getting user for email [%s]", email)
 
-	tx, _ := this.db.Begin()
-	rows, _ := this.db.Query("select lower(email), password from user where lower(email) = lower(?)", email)
+	tx, _ := userDao.db.Begin()
+	rows, _ := userDao.db.Query("select lower(email), password from user where lower(email) = lower(?)", email)
 	defer rows.Close()
 
 	user := getUserFromRows(rows)
@@ -36,11 +38,11 @@ func (this UserDao) getUserByEmail(email string) User {
 	return user
 }
 
-func (this UserDao) getUserByToken(token string) User {
+func (userDao UserDao) getUserByToken(token string) User {
 	log.Debugf("getting user for token [%s]", token)
 
-	tx, _ := this.db.Begin()
-	rows, _ := this.db.Query("select lower(email), password from user where token = ?", token)
+	tx, _ := userDao.db.Begin()
+	rows, _ := userDao.db.Query("select lower(email), password from user where token = ?", token)
 	defer rows.Close()
 
 	user := getUserFromRows(rows)
@@ -48,9 +50,9 @@ func (this UserDao) getUserByToken(token string) User {
 	return user
 }
 
-func (this UserDao) getSubscribedUserEmails() []string {
-	tx, _ := this.db.Begin()
-	rows, _ := this.db.Query("select lower(email) from user where subscribed = 1")
+func (userDao UserDao) getSubscribedUserEmails() []string {
+	tx, _ := userDao.db.Begin()
+	rows, _ := userDao.db.Query("select lower(email) from user where subscribed = 1")
 	defer rows.Close()
 	var emails []string
 	for rows.Next() {
@@ -75,11 +77,11 @@ func getUserFromRows(rows *sql.Rows) User {
 	return User{}
 }
 
-func (this UserDao) setToken(user User) {
+func (userDao UserDao) setToken(user User) {
 	log.Debugf("Updating token [%s]  for email [%s]", user.Token, user.Email)
 
-	tx, _ := this.db.Begin()
-	prepStmt, err := this.db.Prepare("update user set token = ? where email = ?;")
+	tx, _ := userDao.db.Begin()
+	prepStmt, err := userDao.db.Prepare("update user set token = ? where email = ?;")
 	defer prepStmt.Close()
 	_, err = prepStmt.Exec(user.Token, user.Email)
 	if err != nil {
@@ -90,11 +92,11 @@ func (this UserDao) setToken(user User) {
 	}
 }
 
-func (this UserDao) tokenExists(token string) bool {
+func (userDao UserDao) tokenExists(token string) bool {
 	log.Debugf("Checking valid token [%s]", token)
 
-	tx, _ := this.db.Begin()
-	rows, _ := this.db.Query("select 1 from user where token = ?", token)
+	tx, _ := userDao.db.Begin()
+	rows, _ := userDao.db.Query("select 1 from user where token = ?", token)
 	defer rows.Close()
 	tx.Commit()
 	return rows.Next()

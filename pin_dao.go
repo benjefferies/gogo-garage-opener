@@ -1,24 +1,26 @@
 package main
 
 import (
-	log "github.com/Sirupsen/logrus"
 	"database/sql"
-	"github.com/ventu-io/go-shortid"
-	"time"
 	"errors"
+	"time"
+
+	log "github.com/Sirupsen/logrus"
+	"github.com/ventu-io/go-shortid"
 )
 
+// PinDao is the data access for one time pins
 type PinDao struct {
-	db sql.DB
+	db *sql.DB
 }
 
-func (this PinDao) newOneTimePin(user User) (string, error) {
+func (pinDao PinDao) newOneTimePin(user User) (string, error) {
 	pin := shortid.MustGenerate()
 	now := time.Now()
 	log.Debugf("inserting one time pin:[%s], created_by:[%s], created:[%s]", pin, user.Email, now.Local())
 
-	tx, _ := this.db.Begin()
-	prepStmt, err := this.db.Prepare("insert into one_time_pin(pin, created_by, created) values (?, ?, ?)")
+	tx, _ := pinDao.db.Begin()
+	prepStmt, err := pinDao.db.Prepare("insert into one_time_pin(pin, created_by, created) values (?, ?, ?)")
 	defer prepStmt.Close()
 	_, err = prepStmt.Exec(pin, user.getEmail(), now.Unix())
 	if err != nil {
@@ -29,20 +31,20 @@ func (this PinDao) newOneTimePin(user User) (string, error) {
 	return pin, err
 }
 
-func (this PinDao) use(pin string) error {
+func (pinDao PinDao) use(pin string) error {
 	now := time.Now()
 	log.Debugf("using one time pin: [%s] at: [%s]", pin, now.Local())
 
-	tx, _ := this.db.Begin()
-	prepStmt, err := this.db.Prepare("update one_time_pin set used = ? where pin = ? and used is null")
+	tx, _ := pinDao.db.Begin()
+	prepStmt, err := pinDao.db.Prepare("update one_time_pin set used = ? where pin = ? and used is null")
 	defer prepStmt.Close()
 	resp, err := prepStmt.Exec(now.Unix(), pin)
 	if err != nil {
 		tx.Rollback()
 		return err
-	} else {
-		tx.Commit()
 	}
+
+	tx.Commit()
 	rowsAffected, err := resp.RowsAffected()
 	if err == nil && rowsAffected == 0 {
 		err = errors.New("Pin has already been used")
@@ -50,11 +52,11 @@ func (this PinDao) use(pin string) error {
 	return err
 }
 
-func (this PinDao) getPinUsedDate(pin string) (int64, error) {
+func (pinDao PinDao) getPinUsedDate(pin string) (int64, error) {
 	log.Debugf("Getting used date for pin: [%s]", pin)
 
-	tx, _ := this.db.Begin()
-	prepStmt, err := this.db.Prepare("select used from one_time_pin where pin = ?")
+	tx, _ := pinDao.db.Begin()
+	prepStmt, err := pinDao.db.Prepare("select used from one_time_pin where pin = ?")
 	defer prepStmt.Close()
 	row := prepStmt.QueryRow(pin)
 	var usedDate int64
@@ -62,8 +64,7 @@ func (this PinDao) getPinUsedDate(pin string) (int64, error) {
 	if err != nil {
 		log.WithError(err).Errorf("Could not get pin used date for [%s]", pin)
 		tx.Rollback()
-	} else {
-		tx.Commit()
 	}
+	tx.Commit()
 	return usedDate, err
 }

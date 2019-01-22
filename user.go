@@ -1,20 +1,22 @@
 package main
 
 import (
-	"golang.org/x/crypto/bcrypt"
 	"strings"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
+// User holds email, password and token
 type User struct {
 	Email, Password, Token string
 }
 
-func (this User) hashPassword() (User, error) {
-	passwordBytes := []byte(this.Password)
+func (user User) hashPassword() (User, error) {
+	passwordBytes := []byte(user.Password)
 	password, err := bcrypt.GenerateFromPassword(passwordBytes, bcrypt.DefaultCost)
-	return User{Email: this.Email, Password: string(password), Token: this.Password}, err
+	return User{Email: user.Email, Password: string(password), Token: user.Password}, err
 }
 
-func (this User) getEmail() string {
-	return strings.ToLower(this.Email)
+func (user User) getEmail() string {
+	return strings.ToLower(user.Email)
 }

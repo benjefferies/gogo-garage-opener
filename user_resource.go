@@ -1,15 +1,17 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/emicklei/go-restful"
 	"github.com/satori/go.uuid"
 	"golang.org/x/crypto/bcrypt"
-	"encoding/json"
-	"fmt"
 )
 
-const ONE_TIME_PIN_USE  = `
+// oneTimePinUse static html of one time pin page
+const oneTimePinUse = `
 <html>
 	</head>
 	<body>
@@ -25,29 +27,30 @@ const ONE_TIME_PIN_USE  = `
 </html>
 `
 
+// UserResource API for users
 type UserResource struct {
 	userDao UserDao
-	pinDao PinDao
+	pinDao  PinDao
 }
 
-func (this UserResource) register(container *restful.Container) {
+func (userResource UserResource) register(container *restful.Container) {
 	ws := new(restful.WebService)
 
 	ws.Path("/user").
 		Consumes(restful.MIME_JSON).
 		Produces(restful.MIME_JSON)
 
-	ws.Route(ws.POST("login").To(this.login))
-	ws.Route(ws.POST("one-time-pin").To(this.oneTimePin))
-	ws.Route(ws.GET("one-time-pin/{oneTimePin}").To(this.useOneTimePin))
+	ws.Route(ws.POST("login").To(userResource.login))
+	ws.Route(ws.POST("one-time-pin").To(userResource.oneTimePin))
+	ws.Route(ws.GET("one-time-pin/{oneTimePin}").To(userResource.useOneTimePin))
 	container.Add(ws)
 }
 
-func (this UserResource) oneTimePin(request *restful.Request, response *restful.Response)  {
+func (userResource UserResource) oneTimePin(request *restful.Request, response *restful.Response) {
 	token := request.HeaderParameter("X-Auth-Token")
-	user := this.userDao.getUserByToken(token)
+	user := userResource.userDao.getUserByToken(token)
 	log.Debugf("%s is creating new one time pin", user.Email)
-	pin, err := this.pinDao.newOneTimePin(user)
+	pin, err := userResource.pinDao.newOneTimePin(user)
 	if err != nil {
 		log.WithError(err).Error("Could not create one time pin")
 		response.WriteHeader(500)
@@ -63,16 +66,16 @@ func (this UserResource) oneTimePin(request *restful.Request, response *restful.
 	response.Write(payload)
 }
 
-func (this UserResource) useOneTimePin(request *restful.Request, response *restful.Response)  {
+func (userResource UserResource) useOneTimePin(request *restful.Request, response *restful.Response) {
 	oneTimePin := request.PathParameter("oneTimePin")
 	response.ResponseWriter.WriteHeader(200)
-	response.ResponseWriter.Write([]byte(fmt.Sprintf(ONE_TIME_PIN_USE, TIME_TO_CLOSE.Seconds(), oneTimePin)))
+	response.ResponseWriter.Write([]byte(fmt.Sprintf(oneTimePinUse, timeToClose.Seconds(), oneTimePin)))
 }
 
-func (this UserResource) login(request *restful.Request, response *restful.Response) {
+func (userResource UserResource) login(request *restful.Request, response *restful.Response) {
 	loginUser := new(User)
 	request.ReadEntity(&loginUser)
-	user := this.userDao.getUserByEmail(loginUser.Email)
+	user := userResource.userDao.getUserByEmail(loginUser.Email)
 	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginUser.Password))
 	if err == bcrypt.ErrMismatchedHashAndPassword {
 		log.Infof("Login failed for [%s]", user.Email)
@@ -84,7 +87,7 @@ func (this UserResource) login(request *restful.Request, response *restful.Respo
 	} else {
 		log.Infof("Login successful for [%s]", user.Email)
 		user.Token = uuid.Must(uuid.NewV4()).String()
-		this.userDao.setToken(user)
+		userResource.userDao.setToken(user)
 		response.Header().Set("X-Auth-Token", user.Token)
 		log.Debugf("Setting X-Auth-Token to [%s]", user.Token)
 	}
