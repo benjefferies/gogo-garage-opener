@@ -2,18 +2,29 @@
 # gogo-garage-opener
 Go implementation of a Raspberry Pi garage door opener
 
-#### Features
+## Features
 
-* Open garage door using a [mobile app](#apps)
-* Generate one time pins to allow someone temporary access to your garage i.e. A delivery man or a friend or a family member.
+### Open garage door using a mobile app
 
-#### Apps
 [Garage Opener on Play Store](https://play.google.com/store/apps/details?id=uk.echosoft.garageopener&hl=en_GB) ([source](https://github.com/benjefferies/gogo-garage-opener-android))
 
 Garage Opener for iPhone, Android App implemented using ionics framework ([source](https://github.com/benjefferies/gogo-garage-opener-ui))
 
-#### Guide
-##### Prerequisites
+### Use one time pin
+
+To use a one time pin go to http://localhost:8080/user/one-time-pin/abcd1234. The pin at the end is the generated pin, once the open button has been pressed the pin will be marked as used.
+
+### Open garage door notification
+The application can be configured to notify users which have accounts via their email address if the garage door has been left open for a configurable period.
+The CLI argument `-notification=15m` configures the app to notify all users if the door has been left open longer than the configuration duration.
+It uses [AWS SES](https://aws.amazon.com/documentation/ses/) as an SMTP service for sending the emails.
+To configure the application to use your SES account you will need to set the environmental variables $AWS_ACCESS_KEY_ID, $AWS_SECRET_KEY and $AWS_SES_ENDPOINT environmental variables. See [go-ses](https://github.com/sourcegraph/go-ses#running-tests)
+
+### Autoclose
+Auto close the door if it's left open between 10PM and 8AM. This can be enabled with the CLI argument -autoclose.
+
+## Guide
+### Prerequisites
 
 * Garage door opener I have an [EcoStar Liftronic 500](https://www.amazon.co.uk/gp/product/B00520C7M2/ref=oh_aui_detailpage_o03_s00?ie=UTF8&psc=1) but any model which will allow you to hook up a switch will work
 * Raspberry Pi (I am using model B) wired up to internet or local network
@@ -23,9 +34,9 @@ Garage Opener for iPhone, Android App implemented using ionics framework ([sourc
 * Clone the repository
 * [Docker](https://docs.docker.com/engine/installation/) installed
 
-##### To build
+### To build
 
-###### <a name="software">Software</a>
+#### <a name="software">Software</a>
 The build framework uses docker to make the process easier. With some fiddling about you can build it natively on the Raspberry Pi or on your development machine.
 
 **Note.** If compiling manually rather than using docker you will need to install an arm gcc on your development machine compile the source. The docker build takes care of all of this.
@@ -37,7 +48,7 @@ The build framework uses docker to make the process easier. With some fiddling a
 1. You should have a binary file called `gogo-garage-opener` in the project directory
 1. Copy the binary file `gogo-garage-opener` to your Raspberry Pi
 
-##### Creating a user
+#### Creating a user
 
 To use [gogo-garage-opener-ui](https://github.com/benjefferies/gogo-garage-opener-ui) or use the APIs you will need to create an account
 
@@ -45,7 +56,7 @@ To use [gogo-garage-opener-ui](https://github.com/benjefferies/gogo-garage-opene
 1. Run the app with `--email` and `--password` arguments e.g. `./gogo-garage-opener --email benjefferies@example.com --password secret`
 1. The application will exit with a message `Created account email:benjefferies@example.com. Exiting...`
 
-##### Running
+#### Running
 
 1. Ensure you have completed the [Hardware set up](#hardware)
 1. Run the application as root `sudo nohup ./gogo-garage-opener -s 15 -r 18 &`
@@ -55,17 +66,7 @@ To use [gogo-garage-opener-ui](https://github.com/benjefferies/gogo-garage-opene
     
 **Note.** If you are considering making the application available over the internet you will want your credentials to be encrypted over SSL, this can be achieved with a reverse proxy such as ngnix or apache2 with the correct mod.
 
-##### Use one time pin
-
-To use a one time pin go to http://localhost:8080/user/one-time-pin/abcd1234. The pin at the end is the generated pin, once the open button has been pressed the pin will be marked as used.
-
-##### Open garage door notification
-The application can be configured to notify users which have accounts via their email address if the garage door has been left open for a configurable period.
-The command line argument `-notification=15m` configures the app to notify all users if the door has been left open longer than the configuration duration.
-It uses [AWS SES](https://aws.amazon.com/documentation/ses/) as an SMTP service for sending the emails.
-To configure the application to use your SES account you will need to set the environmental variables $AWS_ACCESS_KEY_ID, $AWS_SECRET_KEY and $AWS_SES_ENDPOINT environmental variables. See [go-ses](https://github.com/sourcegraph/go-ses#running-tests)
-
-###### Hardware
+#### Hardware
 
 I will describe how to set up your Raspberry Pi and the peripherals referring to the GPIO pins set up my Raspberry PI. Check that they are the same for your version. [GPIO documentation](https://www.raspberrypi.org/documentation/usage/gpio/)
 
@@ -102,4 +103,4 @@ Wiring up the magnetic switch
 
 #### Future
 
-* Open garage door via location i.e. Automatically open garage within 100 metres of your garage. I have found a nice way to do this using [Automate](http://llamalab.com/automate/). I can upload a template of a flow if anyone would find it useful.
+* Open garage door via location i.e. Automatically open garage within 100 metres of your garage. I have found a nice way to do this using [Automate](http://llamalab.com/automate/).

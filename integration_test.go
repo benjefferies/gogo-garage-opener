@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/Rican7/retry"
 	"github.com/Rican7/retry/strategy"
-	"github.com/Sirupsen/logrus"
+	log "github.com/Sirupsen/logrus"
 	"time"
 	"flag"
 	"database/sql"
@@ -20,22 +20,22 @@ func TestMain(m *testing.M) {
 	main()
 	flag.Set("email", "")
 	flag.Set("password", "")
-	logrus.Info("created user")
+	log.Info("created user")
 	flag.Set("noop", "true")
-	logrus.Info("Starting server")
+	log.Info("Starting server")
 	go main()
 	err := retry.Retry(func(attempt uint) error {
 		_, err := resty.R().Get("http://localhost:8080/user/one-time-pin/my-pin")
 		return err
 	}, strategy.Limit(5), strategy.Delay(time.Second))
 	if err != nil {
-		logrus.WithError(err).Fatal("Application is not initialised")
+		log.WithError(err).Fatal("Application is not initialised")
 	}
 	m.Run()
-	logrus.Info("Started server")
+	log.Info("Started server")
 	err = os.Remove("gogo-garage-opener.db")
 	if err != nil {
-		logrus.WithError(err).Fatal("Could not delete database file")
+		log.WithError(err).Fatal("Could not delete database file")
 	}
 	os.Exit(0)
 }

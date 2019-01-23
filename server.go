@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"flag"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -25,6 +26,7 @@ var (
 	password             = flag.String("password", "", "Specify email to create account")
 	noop                 = flag.Bool("noop", false, "Noop can be ran without the raspberry pi")
 	notification         = flag.Duration("notification", time.Second*0, "The time to wait in minutes before sending a warning email")
+	autoclose            = flag.Bool("autoclose", true, "Should auto close between 10pm-8am")
 )
 
 func main() {
@@ -64,10 +66,22 @@ func main() {
 
 		server := &http.Server{Addr: ":" + strconv.Itoa(*portFlag), Handler: wsContainer}
 		if *notification > time.Second*0 {
-			log.Infof("Monitoring garage door")
+			log.Infof("Monitoring garage door to send alerts")
 			go monitorDoor(doorController, userDao)
-		} else {
-			log.Infof("Not monitoring garage door")
+		}
+
+		if *autoclose {
+			log.Infof("Monitoring garage door to autoclose")
+			go func() {
+				for true {
+					now := time.Now()
+					autoclose := Autoclose{now: now, doorController: doorController}
+					if autoclose.autoClose() {
+						sendMail(userDao, "Autoclose: Garage door left open", fmt.Sprintf("Garage door appears to be left open at %s", now.Format("3:04 PM")))
+					}
+					time.Sleep(time.Minute)
+				}
+			}()
 		}
 		log.Fatal(server.ListenAndServe())
 	}
@@ -86,7 +100,7 @@ func monitorDoor(doorController DoorController, userDao UserDao) {
 			openTooLong := lastOpened.Add(*notification)
 			if now.After(openTooLong) {
 				log.Infof("Sending emails for open notification")
-				sendMail(userDao)
+				sendMail(userDao, "Notification: Garage door left open", fmt.Sprintf("Garage door has been left open since %s", lastOpened.Format("3:04 PM")))
 			}
 		} else {
 			lastOpened = nilTime
@@ -95,9 +109,9 @@ func monitorDoor(doorController DoorController, userDao UserDao) {
 	}
 }
 
-func sendMail(userDao UserDao) {
+func sendMail(userDao UserDao, title string, body string) {
 	for _, email := range userDao.getSubscribedUserEmails() {
-		_, err := ses.EnvConfig.SendEmail("garagedoor@mygaragedoor.tech", email, "Door left open", "Door left open")
+		_, err := ses.EnvConfig.SendEmail("garagedoor@mygaragedoor.tech", email, title, body)
 		if err != nil {
 			log.Errorf("Error sending email: %s\n", err)
 		}
