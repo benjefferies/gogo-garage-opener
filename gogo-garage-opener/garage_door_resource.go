@@ -1,11 +1,14 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/emicklei/go-restful"
+	"github.com/gorilla/context"
+	"github.com/gorilla/mux"
 )
 
 // timeToClose time to automatically close the door after opening with pin
@@ -18,40 +21,38 @@ type GarageDoorResource struct {
 	doorController DoorController
 }
 
-func (garageDoorResource GarageDoorResource) register(container *restful.Container) {
-	ws := new(restful.WebService)
+func (garageDoorResource GarageDoorResource) register(router *mux.Router) {
+	subRouter := router.PathPrefix("/garage").Subrouter()
 
-	ws.Path("/garage").
-		Consumes(restful.MIME_JSON).
-		Produces(restful.MIME_JSON)
-
-	ws.Route(ws.POST("toggle").To(garageDoorResource.toggleGarage))
-	ws.Route(ws.GET("state").To(garageDoorResource.getState))
-	ws.Route(ws.POST("one-time-pin/{oneTimePin}").Consumes("application/x-www-form-urlencoded").To(garageDoorResource.useOneTimePin))
-
-	container.Add(ws)
+	subRouter.Path("/toggle").Methods("POST").Handler(jwtCheckHandleFunc(garageDoorResource.toggleGarage))
+	subRouter.Path("/state").Methods("GET").Headers("Content-Type", "application/json").Handler(jwtCheckHandleFunc(garageDoorResource.getState))
+	subRouter.Path("/one-time-pin/{oneTimePin}").Methods("POST").HandlerFunc(garageDoorResource.useOneTimePin)
 }
 
-func (garageDoorResource GarageDoorResource) useOneTimePin(request *restful.Request, response *restful.Response) {
-	oneTimePin := request.PathParameter("oneTimePin")
+func (garageDoorResource GarageDoorResource) useOneTimePin(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	oneTimePin := vars["oneTimePin"]
 	log.Infof("Using one time pin: [%s] to toggle garage", oneTimePin)
 	usedDate, err := garageDoorResource.pinDao.getPinUsedDate(oneTimePin)
 	if usedDate > 0 {
 		log.Infof("Pin has already been used")
-		response.WriteHeaderAndEntity(401, "Pin has already been used")
+		w.WriteHeader(401)
+		fmt.Fprintf(w, "Pin has already been used")
 	} else if err != nil {
 		log.WithError(err).Errorf("Could not get pin used date for [%s]", oneTimePin)
-		response.WriteHeaderAndEntity(500, "Failed to open garage")
+		w.WriteHeader(500)
+		fmt.Fprintf(w, "Failed to open garage")
 	} else {
 		err = garageDoorResource.pinDao.use(oneTimePin)
 		if err != nil {
 			log.WithError(err).Errorf("Could not use pin: [%s]", oneTimePin)
-			response.WriteHeaderAndEntity(401, "Pin has already been used")
+			w.WriteHeader(401)
+			fmt.Fprintf(w, "Pin has already been used")
 			return
 		}
 		garageDoorResource.doorController.toggleDoor()
-		response.WriteHeaderAndEntity(202, fmt.Sprintf("Opening garage, it will close in %v seconds",
-			timeToClose.Seconds()))
+		w.WriteHeader(202)
+		fmt.Fprintf(w, "Opening garage, it will close in %v seconds", timeToClose.Seconds())
 		go garageDoorResource.closeGarage(oneTimePin)
 	}
 }
@@ -62,16 +63,17 @@ func (garageDoorResource GarageDoorResource) closeGarage(pin string) {
 	garageDoorResource.doorController.toggleDoor()
 }
 
-func (garageDoorResource GarageDoorResource) toggleGarage(request *restful.Request, response *restful.Response) {
-	token := request.HeaderParameter("X-Auth-Token")
-	user := garageDoorResource.userDao.getUserByToken(token)
-	log.Infof("%s is opening or closing garage", user.Email)
+func (garageDoorResource GarageDoorResource) toggleGarage(w http.ResponseWriter, r *http.Request) {
+	accessToken := context.Get(r, "access_token")
+	email := getEmail(fmt.Sprintf("%s", accessToken))
+	log.Infof("%s is opening or closing garage", email)
 	garageDoorResource.doorController.toggleDoor()
-	response.WriteHeader(202)
+	w.WriteHeader(202)
 }
 
-func (garageDoorResource GarageDoorResource) getState(request *restful.Request, response *restful.Response) {
+func (garageDoorResource GarageDoorResource) getState(w http.ResponseWriter, r *http.Request) {
 	log.Debug("Getting garage state")
 	state := garageDoorResource.doorController.getDoorState()
-	response.WriteAsJson(*newState(state))
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(*newState(state))
 }

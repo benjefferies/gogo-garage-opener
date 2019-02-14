@@ -1,17 +1,18 @@
 package main
 
 import (
-	"testing"
+	"database/sql"
+	"encoding/json"
+	"flag"
 	"os"
-	"gopkg.in/resty.v0"
-	"github.com/stretchr/testify/assert"
+	"testing"
+	"time"
+
 	"github.com/Rican7/retry"
 	"github.com/Rican7/retry/strategy"
 	log "github.com/Sirupsen/logrus"
-	"time"
-	"flag"
-	"database/sql"
-	"encoding/json"
+	"github.com/stretchr/testify/assert"
+	"gopkg.in/resty.v0"
 )
 
 func TestMain(m *testing.M) {
@@ -46,35 +47,6 @@ func TestOneTimePinAccess(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 200, response.StatusCode(), "Expecting OK http status")
 	assert.Contains(t, string(response.Body()), "action=\"/garage/one-time-pin/my-pin\"", "Should contain link to use pin")
-}
-
-func TestLogin(t *testing.T) {
-	user := map[string]interface{}{
-		"Email": "test@example.com",
-		"Password": "password",
-	}
-
-	response, err := resty.R().
-		SetBody(user).
-		Post("http://localhost:8080/user/login")
-
-	assert.Nil(t, err, "Not expecting an error")
-	assert.Equal(t, 200, response.StatusCode(), "Expecting OK http status")
-	assert.Equal(t, getToken(t), response.Header().Get("X-Auth-Token"), "Token should be in X-Auth-Token header")
-}
-
-func TestLoginWithIncorrectPassword(t *testing.T) {
-	user := map[string]interface{}{
-		"Email": "test@example.com",
-		"Password": "wrong_password",
-	}
-
-	response, err := resty.R().
-		SetBody(user).
-		Post("http://localhost:8080/user/login")
-
-	assert.Nil(t, err, "Not expecting an error")
-	assert.Equal(t, 400, response.StatusCode(), "Expecting 400 http status")
 }
 
 func TestNewOneTimePin(t *testing.T) {

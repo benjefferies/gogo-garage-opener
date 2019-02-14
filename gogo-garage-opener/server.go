@@ -1,164 +1,132 @@
 package main
 
 import (
-	"database/sql"
-	"flag"
-	"fmt"
+	"encoding/json"
+	"errors"
 	"net/http"
-	"strconv"
-	"time"
+	"strings"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/emicklei/go-restful"
-	_ "github.com/mattn/go-sqlite3"
-	"github.com/sourcegraph/go-ses"
+	jwtmiddleware "github.com/auth0/go-jwt-middleware"
+	"github.com/codegangsta/negroni"
+	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/gorilla/context"
 )
 
-const database = "gogo-garage-opener.db"
-const port = 8080
-
-var (
-	relayPinFlag         = flag.Int("r", 14, "The relay pin number on the raspberry pi")
-	contactSwitchPinFlag = flag.Int("s", 7, "The contact switch pin number on the raspberry pi")
-	portFlag             = flag.Int("p", port, "The port the server is listening on")
-	databaseFlag         = flag.String("db", database, "The database file")
-	email                = flag.String("email", "", "Specify email to create account")
-	password             = flag.String("password", "", "Specify email to create account")
-	noop                 = flag.Bool("noop", false, "Noop can be ran without the raspberry pi")
-	notification         = flag.Duration("notification", time.Second*0, "The time to wait in minutes before sending a warning email")
-	autoclose            = flag.Bool("autoclose", true, "Should auto close between 10pm-8am")
-)
-
-func main() {
-	flag.Parse()
-	log.SetLevel(log.InfoLevel)
-	logConfiguration()
-	db, err := sql.Open("sqlite3", *databaseFlag)
-	if err != nil {
-		log.WithError(err).Fatalf("Failed to open db [%s]", *databaseFlag)
-	}
-
-	defer db.Close()
-
-	setupTables(db)
-
-	userDao := UserDao{db}
-	created := createUser(userDao)
-	if !created {
-		pinDao := PinDao{db}
-		userResource := UserResource{userDao: userDao, pinDao: pinDao}
-		doorController := getDoorController(*noop)
-
-		defer doorController.close()
-		garageDoorResource := GarageDoorResource{userDao: userDao, pinDao: pinDao, doorController: doorController}
-		authFilter := AuthFilter{userDao: userDao}
-		wsContainer := restful.NewContainer()
-		userResource.register(wsContainer)
-		garageDoorResource.register(wsContainer)
-
-		cors := restful.CrossOriginResourceSharing{
-			ExposeHeaders:  []string{"X-Auth-Token"},
-			AllowedHeaders: []string{"Content-Type", "Accept", "X-Auth-Token"},
-			CookiesAllowed: false,
-			Container:      wsContainer}
-		wsContainer.Filter(cors.Filter)
-		wsContainer.Filter(authFilter.tokenFilter)
-
-		server := &http.Server{Addr: ":" + strconv.Itoa(*portFlag), Handler: wsContainer}
-		if *notification > time.Second*0 {
-			log.Infof("Monitoring garage door to send alerts")
-			go monitorDoor(doorController, userDao)
-		}
-
-		if *autoclose {
-			log.Infof("Monitoring garage door to autoclose")
-			go func() {
-				for true {
-					now := time.Now()
-					autoclose := Autoclose{now: now, doorController: doorController}
-					if autoclose.autoClose() {
-						sendMail(userDao, "Autoclose: Garage door left open", fmt.Sprintf("Garage door appears to be left open at %s", now.Format("3:04 PM")))
-					}
-					time.Sleep(time.Minute)
-				}
-			}()
-		}
-		log.Fatal(server.ListenAndServe())
-	}
+type Response struct {
+	Message string `json:"message"`
 }
 
-func monitorDoor(doorController DoorController, userDao UserDao) {
-	nilTime := time.Time{}
-	lastOpened := nilTime
-	for true {
-		if doorController.getDoorState() == open {
-			if lastOpened == nilTime {
-				log.Infof("Setting lastOpened")
-				lastOpened = time.Now()
+type Jwks struct {
+	Keys []JSONWebKeys `json:"keys"`
+}
+
+type JSONWebKeys struct {
+	Kty string   `json:"kty"`
+	Kid string   `json:"kid"`
+	Use string   `json:"use"`
+	N   string   `json:"n"`
+	E   string   `json:"e"`
+	X5c []string `json:"x5c"`
+}
+
+type CustomClaims struct {
+	Scope string `json:"scope"`
+	jwt.StandardClaims
+}
+
+func jwtCheckHandleFunc(httpFunc http.HandlerFunc) *negroni.Negroni {
+	jwtMiddleware := jwtmiddleware.New(jwtmiddleware.Options{
+		ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
+			// Verify 'aud' claim
+			aud := "https://open.mygaragedoor.space/api"
+			checkAud := token.Claims.(jwt.MapClaims).VerifyAudience(aud, false)
+			if !checkAud {
+				return token, errors.New("Invalid audience.")
 			}
-			now := time.Now()
-			openTooLong := lastOpened.Add(*notification)
-			if now.After(openTooLong) {
-				log.Infof("Sending emails for open notification")
-				sendMail(userDao, "Notification: Garage door left open", fmt.Sprintf("Garage door has been left open since %s", lastOpened.Format("3:04 PM")))
+			// Verify 'iss' claim
+			iss := "https://gogo-garage-opener.eu.auth0.com/"
+			checkIss := token.Claims.(jwt.MapClaims).VerifyIssuer(iss, false)
+			if !checkIss {
+				return token, errors.New("Invalid issuer.")
 			}
-		} else {
-			lastOpened = nilTime
-		}
-		time.Sleep(*notification)
-	}
+
+			cert, err := getPemCert(token)
+			if err != nil {
+				panic(err.Error())
+			}
+
+			result, _ := jwt.ParseRSAPublicKeyFromPEM([]byte(cert))
+			return result, nil
+		},
+		SigningMethod: jwt.SigningMethodRS256,
+	})
+	return negroni.New(negroni.HandlerFunc(jwtMiddleware.HandlerWithNext),
+		negroni.HandlerFunc(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+			authHeaderParts := strings.Split(r.Header.Get("Authorization"), " ")
+			token := authHeaderParts[1]
+			log.Info("Checking scope")
+			hasScope := checkScope("email", token)
+
+			if !hasScope {
+				log.Info("Invalid scope")
+				http.Error(w, "Insufficient scope.", http.StatusForbidden)
+			} else {
+				next(w, r)
+			}
+		}), negroni.WrapFunc(exportAccessToken), negroni.Wrap(httpFunc))
 }
 
-func sendMail(userDao UserDao, title string, body string) {
-	for _, email := range userDao.getSubscribedUserEmails() {
-		_, err := ses.EnvConfig.SendEmail("garagedoor@mygaragedoor.tech", email, title, body)
-		if err != nil {
-			log.Errorf("Error sending email: %s\n", err)
-		}
-	}
+func exportAccessToken(w http.ResponseWriter, r *http.Request) {
+	reqToken := r.Header.Get("Authorization")
+	log.Infof("Got %s", reqToken)
+	splitToken := strings.Split(reqToken, "Bearer ")
+	accessToken := splitToken[1]
+	context.Set(r, "access_token", accessToken)
 }
 
-func logConfiguration() {
-	log.Debugf("Relay pin %d", *relayPinFlag)
-	log.Debugf("Sensor pin %d", *contactSwitchPinFlag)
-	log.Debugf("Database file %s", *databaseFlag)
-	log.Debugf("Webserver port %d", *portFlag)
-}
+func getPemCert(token *jwt.Token) (string, error) {
+	cert := ""
+	resp, err := http.Get("https://gogo-garage-opener.eu.auth0.com/.well-known/jwks.json")
 
-func setupTables(db *sql.DB) {
-	// Create user table
-	_, err := db.Exec("CREATE TABLE IF NOT EXISTS user (email TEXT NOT NULL PRIMARY KEY, password TEXT, token TEXT, subscribed BOOLEAN DEFAULT 1);")
 	if err != nil {
-		log.WithError(err).Fatal("Could not create user table")
+		return cert, err
 	}
+	defer resp.Body.Close()
 
-	// Create one time pin table
-	_, err = db.Exec("CREATE TABLE IF NOT EXISTS one_time_pin (pin TEXT NOT NULL PRIMARY KEY, created_by TEXT, created INTEGER, used INTEGER);")
+	var jwks = Jwks{}
+	err = json.NewDecoder(resp.Body).Decode(&jwks)
+
 	if err != nil {
-		log.WithError(err).Fatal("Could not create one_time_pin table")
+		return cert, err
 	}
-}
 
-func createUser(userDao UserDao) bool {
-	if (*email != "" && password != nil) && (email != nil && *password != "") {
-		user, err := User{Email: *email, Password: *password}.hashPassword()
-		if err != nil {
-			log.WithError(err).Fatalf("Failed to create user: %s", *email)
+	for k, _ := range jwks.Keys {
+		if token.Header["kid"] == jwks.Keys[k].Kid {
+			cert = "-----BEGIN CERTIFICATE-----\n" + jwks.Keys[k].X5c[0] + "\n-----END CERTIFICATE-----"
 		}
-		userDao.createUser(user)
-		log.Infof("Created account email:%s. Exiting...", *email)
-		return true
 	}
-	return false
+
+	if cert == "" {
+		err := errors.New("Unable to find appropriate key.")
+		return cert, err
+	}
+
+	return cert, nil
 }
 
-func getDoorController(noop bool) DoorController {
-	var doorController DoorController
-	if noop {
-		log.Info("Running in noop mode")
-		doorController = NoopDoorController{}
-	} else {
-		doorController = NewRaspberryPiDoorController(*relayPinFlag, *contactSwitchPinFlag)
+func checkScope(scope string, tokenString string) bool {
+	token, _ := jwt.ParseWithClaims(tokenString, &CustomClaims{}, nil)
+
+	claims, _ := token.Claims.(*CustomClaims)
+
+	hasScope := false
+	result := strings.Split(claims.Scope, " ")
+	for i := range result {
+		if result[i] == scope {
+			hasScope = true
+		}
 	}
-	return doorController
+
+	return hasScope
 }
