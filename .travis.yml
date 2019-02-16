@@ -1,22 +1,18 @@
-
 language: go
-
 go:
- - 1.11.4
- - tip
-
+- 1.11.4
+- tip
 matrix:
   fast_finish: true
-
 env:
   global:
-    - PATH=$HOME/gopath/bin:$PATH
-
+  - PATH=$HOME/gopath/bin:$PATH
+  - EMAIL=test@echosoft.uk
+  - secure: DKZwa8iXl6o66/sIuQliuOR/Nhiagwk2XLFi1o6xntwpFcW0eF2pYKfFnHovKTacorYamwWhdUs4QwkLMmXl3plBDGqoOAypuv2GkCkY7CduDcwqRDkRkmD3Oiwr5ZSKE6KWesOcBDZoXN1BGeFfZSYBROyrmSSAGz4OZBxjDTJU3t7oF2IE/Islwm/jIimJqZfse3vzYvri7HM4YJnVMBH12NKTfhg2yhd+Eo7YqfeSPeP2LqGS2gZagUhgcBOFnZqdei4mKY4eHQA7glMOLyH3vi7zafXuJx9Paw4rG/IHNFzre9YVP+y6BZX9Pxkga7Vtmp//DM7WCXouBxN5dgwDVGSb4aylxhMpD99z/JguJS6paOZJErbsPGKzKjtsq4Hdpyy+Vqa94SvedzzTlSaS8PiphnCUWLtmIXW826c+PM5VPCBNiUusIXww2vkLa6ymaNCnsxcJ5PSRo0ITP7CV5Zn1ihQcruR5jnsEBRKKLcEt50e7MhDJbXA0H8+CMUC14AYINmIp+uHJaNd3gE2nNFdhHhY20DGl6d5LvTpyuxW1tiUbdVhyiecnn/eJWnOza8nHtJVZ/Vy2LoI4NrocHyuT+/AhJDsFqR32BwHYt8pbJqflbm07hYp77h0li1WUFficFkPLGLIEi4HqL94nI8Pax8Xq2pYiTecmoGc=
+  - secure: U2k3Z86cA8UtuHpbbYGmxKsZwzoEMeMprqnXGzo3lB6nvW8Ikg+/bOJjCxqkiKiOIDzO/mxjv2P1dSSwdJjFcBvwfmiegIghaV8Q/YuO0LsjdXgEwew4GMs4yE8bwzAANKyKiMxtdgR7S1zDehb5Vf2DFRuslZzD0iyoj54c378RxaH9kvOUn1lsV0eFK8lqjoBOb4rEOh/Y+zu22SUPJLzT4Fd1715jhzwLFNAiWYldgj7+mTtacnsozoDgQgOGvP/9RjRfvBQPfuDOtIX248kkoB0vGcTs7c88ilR45Rv6b26cMaDDXOQoLvDk6L5X55hNXUUr7Jt/bMKmMrIQP3Xcu7a1zZfb3wqSkYMPB7JH+uhOI2VKh4AifmvhzpIS3rPiMzyGZexKy9lfZ+k6l5XdCpvCnMDYMLz/KXFuDoVgYD3TYl5IPh8WHyx773SMsIzKlYYVd7yvLsqTrpygqUX9oWw3vpUi7ZguNgT0XmW4gi/Is7OT2jD+5TGp7kI/Jq01tToSx5N9mKsQDmMX+NjczF+Ev3l9LnmLXEG4J+26lvCykCtdqdPG9Jh6+x+iXPuNCYWsVDq5jIsr3tnZc9B/+wHiLbXN+0ZcWBpDckh136Q2k9X3k8yjZiqNnrZ5V/bn/WWYmcK+sLqX7kIM6uvPQeAPPIFKDhsRIyFZ94M=
+  - secure: YQxTSr3v+b5NjhpI7L8TDu8wbnkmP8U0OAxnPCuhU+RrPbmFwSSqJZzKa2KVMVSl6ia2O7iAE1Dfvxva4gLj1Rf7XsPASnLmKwZvqMbVTo68msEHAdgGTFIngttjKKbDctsI5HT2vq8EdyB+AwefVECBsNmYBm4BMsHcyjiNDaAkSoUqWhd3pP0nUrkP0XB2nHRMoaiRR1UnjI4nyZzBC2kofMWlQ43Il4zhfNZdK+0L8TdlyDuljMUll+5iAT+kDn+9t+mgDfuEd47al6cmk8SiSGK/XVIhZ9YN1qIoJAn95p73boGxFj8uLlZTSSn1HOgk1cFXid/pFlO7erQM+LtWsSA5UAG7xYv9bDZrF8iHJLbp6JjCOt2SxN1XuuiKyTYm2APxDpfzvC4xC1rpaLvzcSHiMetpULIBnHDIkUP+zmJ1iwl4p3JmBGeEo3w/Bixd4YNWZpD2YoeW6gpcSNL6mxa78nicjn/h0g26IX4M5Fe0Cc6t+gFzdmFM492Qk29L+2BWW9jQGo32ntnwEQXyC35zCs8n742mEAIJva8WelESLC1mb6a65AErFva2drA4ruVfADwOoshHi01tCOiN56Db4Ff5njVD+eC2oaws5u+R9nul4eSnwSNQfr6x+jsv7mLkMtTK3BtaBiZbnJ6mP9RWaP+GmwyUe0LgGmY=
 install:
- - cd gogo-garage-opener
- - go get -t -v ./...
-
+- go get -t -v ./...
 script:
- - cd gogo-garage-opener
- - go build ./...
- - go test -v ./...
+- go build ./...
+- go test -v ./...
