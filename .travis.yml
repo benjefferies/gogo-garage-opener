@@ -13,8 +13,10 @@ env:
     - PATH=$HOME/gopath/bin:$PATH
 
 install:
+ - cd gogo-garage-opener
  - go get -t -v ./...
 
 script:
+ - cd gogo-garage-opener
  - go build ./...
  - go test -v ./...
