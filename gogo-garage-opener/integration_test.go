@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -55,7 +54,6 @@ func getAccessToken() string {
 
 func TestMain(m *testing.M) {
 	accessToken = getAccessToken()
-	flag.Set("noop", "true")
 	log.Info("Starting server")
 	go main()
 	err := retry.Retry(func(attempt uint) error {

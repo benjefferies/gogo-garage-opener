@@ -1,0 +1,34 @@
+version: '3'
+services:
+  caddy:
+    image: "abiosoft/caddy"
+    ports:
+    - "443:443"
+    - "80:80"
+    volumes:
+    - ./caddy:/etc/
+    - $HOME/.caddy:/.caddy
+    - /etc/ssl/certs/:/etc/ssl/certs/
+    restart: always
+    logging:
+        driver: json-file
+        options:
+            max-size: 50m
+  gogo-garage-opener:
+    image: "benjefferies/gogo-garage-opener"
+    volumes:
+    - ./db:/var/gogo-garage-opener/gogo-garage-opener.db
+    environment:
+      - DB=/var/gogo-garage-opener/gogo-garage-opener.db
+      - RELAY=18
+      - SWITCH=15
+      - NOTIFICATION=5m
+      - AUTOCLOSE=true
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_KEY=${AWS_SECRET_KEY}
+      - AWS_SES_ENDPOINT=https://email.us-west-2.amazonaws.com
+    restart: always
+    logging:
+        driver: json-file
+        options:
+            max-size: 50m

@@ -2,11 +2,12 @@ package main
 
 import (
 	"database/sql"
-	"flag"
 	"fmt"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/namsral/flag"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
@@ -18,9 +19,9 @@ const database = "gogo-garage-opener.db"
 const port = 8080
 
 var (
-	relayPinFlag         = flag.Int("r", 14, "The relay pin number on the raspberry pi")
-	contactSwitchPinFlag = flag.Int("s", 7, "The contact switch pin number on the raspberry pi")
-	portFlag             = flag.Int("p", port, "The port the server is listening on")
+	relayPinFlag         = flag.Int("relay", 14, "The relay pin number on the raspberry pi")
+	contactSwitchPinFlag = flag.Int("switch", 7, "The contact switch pin number on the raspberry pi")
+	portFlag             = flag.Int("port", port, "The port the server is listening on")
 	databaseFlag         = flag.String("db", database, "The database file")
 	noop                 = flag.Bool("noop", false, "Noop can be ran without the raspberry pi")
 	notification         = flag.Duration("notification", time.Second*0, "The time to wait in minutes before sending a warning email")
