@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -39,44 +39,72 @@ func (autoCloseDoorController AutoCloseDoorController) close() {
 
 func TestShouldAutoCloseAfter10(t *testing.T) {
 	var now = time.Now()
-	var shouldClose = time.Date(now.Year(), now.Month(), now.Day(), 22, 0, 1, 0, time.UTC)
 	var controller DoorController = &AutoCloseDoorController{open}
-	var autoclose = Autoclose{now: shouldClose, doorController: controller}
+	var lastOpen = time.Date(now.Year(), now.Month(), now.Day(), 22, 0, 0, 0, time.UTC)
+	var autoclose = Autoclose{lastOpen: lastOpen, doorController: controller}
+	var shouldClose = time.Date(now.Year(), now.Month(), now.Day(), 22, 2, 59, 0, time.UTC)
 
-	autoclose.autoClose()
+	autoclose.autoClose(shouldClose)
 
 	assert.Equal(t, closed, controller.getDoorState(), "Should be closed")
 }
 
 func TestShouldNotAutoCloseBefore10(t *testing.T) {
 	var now = time.Now()
-	var shouldClose = time.Date(now.Year(), now.Month(), now.Day(), 21, 0, 1, 0, time.UTC)
 	var controller DoorController = &AutoCloseDoorController{open}
-	var autoclose = Autoclose{now: shouldClose, doorController: controller}
+	var lastOpen = time.Date(now.Year(), now.Month(), now.Day(), 21, 0, 0, 0, time.UTC)
+	var autoclose = Autoclose{lastOpen: lastOpen, doorController: controller}
+	var shouldNotClose = time.Date(now.Year(), now.Month(), now.Day(), 21, 2, 59, 0, time.UTC)
 
-	autoclose.autoClose()
+	autoclose.autoClose(shouldNotClose)
 
 	assert.Equal(t, open, controller.getDoorState(), "Should not be closed")
 }
 
 func TestShouldAutoCloseBefore8(t *testing.T) {
 	var now = time.Now()
-	var shouldClose = time.Date(now.Year(), now.Month(), now.Day(), 7, 0, 1, 0, time.UTC)
 	var controller DoorController = &AutoCloseDoorController{open}
-	var autoclose = Autoclose{now: shouldClose, doorController: controller}
+	var lastOpen = time.Date(now.Year(), now.Month(), now.Day(), 7, 0, 0, 0, time.UTC)
+	var autoclose = Autoclose{lastOpen: lastOpen, doorController: controller}
+	var shouldClose = time.Date(now.Year(), now.Month(), now.Day(), 7, 2, 59, 0, time.UTC)
 
-	autoclose.autoClose()
+	autoclose.autoClose(shouldClose)
 
 	assert.Equal(t, closed, controller.getDoorState(), "Should be closed")
 }
 
 func TestShouldNotOpenAfter10(t *testing.T) {
 	var now = time.Now()
-	var shouldClose = time.Date(now.Year(), now.Month(), now.Day(), 22, 0, 1, 0, time.UTC)
-	var controller DoorController = &AutoCloseDoorController{open}
-	var autoclose = Autoclose{now: shouldClose, doorController: controller}
+	var controller DoorController = &AutoCloseDoorController{closed}
+	var lastOpen = time.Date(now.Year(), now.Month(), now.Day(), 22, 0, 0, 0, time.UTC)
+	var autoclose = Autoclose{lastOpen: lastOpen, doorController: controller}
+	var shouldNotOpen = time.Date(now.Year(), now.Month(), now.Day(), 22, 2, 59, 0, time.UTC)
 
-	autoclose.autoClose()
+	autoclose.autoClose(shouldNotOpen)
+
+	assert.Equal(t, closed, controller.getDoorState(), "Should be closed")
+}
+
+func TestShouldNotCloseAfter10AndLeftOpenFor1Minutes(t *testing.T) {
+	var now = time.Now()
+	var controller DoorController = &AutoCloseDoorController{open}
+	var lastOpen = time.Date(now.Year(), now.Month(), now.Day(), 22, 0, 0, 0, time.UTC)
+	var autoclose = Autoclose{lastOpen: lastOpen, doorController: controller}
+	var shouldNotClose = time.Date(now.Year(), now.Month(), now.Day(), 22, 0, 59, 0, time.UTC)
+
+	autoclose.autoClose(shouldNotClose)
+
+	assert.Equal(t, open, controller.getDoorState(), "Should not be closed")
+}
+
+func TestShouldCloseAfter10AndLeftOpenFor3Minutes(t *testing.T) {
+	var now = time.Now()
+	var controller DoorController = &AutoCloseDoorController{open}
+	var lastOpen = time.Date(now.Year(), now.Month(), now.Day(), 22, 0, 0, 0, time.UTC)
+	var autoclose = Autoclose{lastOpen: lastOpen, doorController: controller}
+	var shouldNotClose = time.Date(now.Year(), now.Month(), now.Day(), 22, 3, 0, 0, time.UTC)
+
+	autoclose.autoClose(shouldNotClose)
 
 	assert.Equal(t, closed, controller.getDoorState(), "Should be closed")
 }

@@ -3,7 +3,7 @@ package main
 import (
 	"database/sql"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 // UserDao data access for users

@@ -9,9 +9,9 @@ import (
 
 	"github.com/namsral/flag"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
 	_ "github.com/mattn/go-sqlite3"
+	log "github.com/sirupsen/logrus"
 	"github.com/sourcegraph/go-ses"
 )
 
@@ -49,7 +49,6 @@ func main() {
 	defer doorController.close()
 	garageDoorResource := GarageDoorResource{userDao: userDao, pinDao: pinDao, doorController: doorController}
 	router := mux.NewRouter()
-
 	userResource.register(router)
 	garageDoorResource.register(router)
 
@@ -62,10 +61,10 @@ func main() {
 	if *autoclose {
 		log.Infof("Monitoring garage door to autoclose")
 		go func() {
+			autoclose := NewAutoclose(doorController)
 			for true {
 				now := time.Now()
-				autoclose := Autoclose{now: now, doorController: doorController}
-				if autoclose.autoClose() {
+				if autoclose.autoClose(now) {
 					sendMail(userDao, "Autoclose: Garage door left open", fmt.Sprintf("Garage door appears to be left open at %s", now.Format("3:04 PM")))
 				}
 				time.Sleep(time.Minute)
