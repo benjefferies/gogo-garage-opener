@@ -1,7 +1,7 @@
 version: '3'
 services:
   caddy:
-    image: "abiosoft/caddy"
+    image: "elswork/arm-caddy"
     ports:
     - "443:443"
     - "80:80"
@@ -15,9 +15,10 @@ services:
         options:
             max-size: 50m
   gogo-garage-opener:
+    privileged: true
     image: "benjefferies/gogo-garage-opener"
     volumes:
-    - ./db:/var/gogo-garage-opener/gogo-garage-opener.db
+    - /var/gogo-garage-opener/gogo-garage-opener.db:/var/gogo-garage-opener/gogo-garage-opener.db
     environment:
       - DB=/var/gogo-garage-opener/gogo-garage-opener.db
       - RELAY=18
