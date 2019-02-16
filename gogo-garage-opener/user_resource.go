@@ -37,10 +37,11 @@ func (userResource UserResource) register(router *mux.Router) {
 	subRouter := router.PathPrefix("/user").Subrouter()
 	subRouter.Path("/login").Methods("POST").Handler(jwtCheckHandleFunc(userResource.login))
 	subRouter.Path("/one-time-pin").Methods("POST").Handler(jwtCheckHandleFunc(userResource.oneTimePin))
-	subRouter.Path("/one-time-pin/{oneTimePin}").Methods("POST").Handler(jwtCheckHandleFunc(userResource.useOneTimePin))
+	subRouter.Path("/one-time-pin/{oneTimePin}").Methods("GET").HandlerFunc(userResource.useOneTimePin)
 }
 
 func (userResource UserResource) oneTimePin(w http.ResponseWriter, r *http.Request) {
+	log.Debugf("Creating new one time pin")
 	accessToken := context.Get(r, "access_token")
 	email := getEmail(fmt.Sprintf("%s", accessToken))
 	log.Debugf("%s is creating new one time pin", email)
@@ -54,6 +55,7 @@ func (userResource UserResource) oneTimePin(w http.ResponseWriter, r *http.Reque
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(pinMap)
+	w.WriteHeader(http.StatusOK)
 }
 
 func (userResource UserResource) useOneTimePin(w http.ResponseWriter, r *http.Request) {

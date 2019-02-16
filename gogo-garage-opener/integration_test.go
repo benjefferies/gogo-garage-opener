@@ -3,8 +3,13 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"flag"
+	"fmt"
+	"io/ioutil"
+	"net/http"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -15,18 +20,46 @@ import (
 	"gopkg.in/resty.v0"
 )
 
+var accessToken string
+
+func getAccessToken() string {
+
+	url := "https://gogo-garage-opener.eu.auth0.com/oauth/token"
+	email := os.Getenv("EMAIL")
+	password := os.Getenv("PASSWORD")
+	clientID := os.Getenv("CLIENT_ID")
+
+	clientSecret := os.Getenv("CLIENT_SECRET")
+	payload := strings.NewReader("{\"grant_type\":\"http://auth0.com/oauth/grant-type/password-realm\",\"username\": \"" + email + "\",\"password\": \"" + password + "\",\"audience\": \"https://open.mygaragedoor.space/api\", \"scope\": \"openid email\", \"client_id\": \"" + clientID + "\", \"client_secret\": \"" + clientSecret + "\", \"realm\": \"Username-Password-Authentication\"}")
+
+	req, _ := http.NewRequest("POST", url, payload)
+
+	req.Header.Add("content-type", "application/json")
+
+	res, _ := http.DefaultClient.Do(req)
+	var accessToken map[string]interface{}
+	body, err := ioutil.ReadAll(res.Body)
+	log.Infof("Got %s", body)
+	if err != nil {
+		panic(errors.New("Could not parse user info"))
+	}
+	err = json.Unmarshal(body, &accessToken)
+	if err != nil {
+		panic(errors.New("Could not marsher user info"))
+	}
+
+	defer res.Body.Close()
+	json := accessToken["access_token"]
+	return fmt.Sprint(json)
+}
+
 func TestMain(m *testing.M) {
-	flag.Set("email", "test@example.com")
-	flag.Set("password", "password")
-	main()
-	flag.Set("email", "")
-	flag.Set("password", "")
-	log.Info("created user")
+	accessToken = getAccessToken()
 	flag.Set("noop", "true")
 	log.Info("Starting server")
 	go main()
 	err := retry.Retry(func(attempt uint) error {
-		_, err := resty.R().Get("http://localhost:8080/user/one-time-pin/my-pin")
+		_, err := resty.R().SetHeader("Authorization", fmt.Sprintf("Bearer %s", accessToken)).Get("http://localhost:8080/user/one-time-pin/my-pin")
 		return err
 	}, strategy.Limit(5), strategy.Delay(time.Second))
 	if err != nil {
@@ -42,7 +75,9 @@ func TestMain(m *testing.M) {
 }
 
 func TestOneTimePinAccess(t *testing.T) {
-	response, err := resty.R().Get("http://localhost:8080/user/one-time-pin/my-pin")
+	response, err := resty.R().
+		SetHeader("Authorization", fmt.Sprintf("Bearer %s", accessToken)).
+		Get("http://localhost:8080/user/one-time-pin/my-pin")
 
 	assert.Nil(t, err)
 	assert.Equal(t, 200, response.StatusCode(), "Expecting OK http status")
@@ -51,8 +86,8 @@ func TestOneTimePinAccess(t *testing.T) {
 
 func TestNewOneTimePin(t *testing.T) {
 	response, err := resty.R().
+		SetHeader("Authorization", fmt.Sprintf("Bearer %s", accessToken)).
 		SetHeader("Content-Type", "application/json").
-		SetHeader("X-Auth-Token", getToken(t)).
 		Post("http://localhost:8080/user/one-time-pin")
 
 	assert.Nil(t, err, "Not expecting an error")
@@ -91,7 +126,7 @@ func TestCannotUseOneTimePinTwice(t *testing.T) {
 func TestToggleGarage(t *testing.T) {
 	response, err := resty.R().
 		SetHeader("Content-Type", "application/json").
-		SetHeader("X-Auth-Token", getToken(t)).
+		SetHeader("Authorization", fmt.Sprintf("Bearer %s", accessToken)).
 		Post("http://localhost:8080/garage/toggle")
 
 	assert.Nil(t, err, "Not expecting an error")
@@ -101,7 +136,7 @@ func TestToggleGarage(t *testing.T) {
 func TestGarageStatus(t *testing.T) {
 	response, err := resty.R().
 		SetHeader("Content-Type", "application/json").
-		SetHeader("X-Auth-Token", getToken(t)).
+		SetHeader("Authorization", fmt.Sprintf("Bearer %s", accessToken)).
 		Get("http://localhost:8080/garage/state")
 
 	assert.Nil(t, err, "Not expecting an error")
@@ -133,8 +168,10 @@ func getPin(t *testing.T) string {
 func getNewPin(t *testing.T) string {
 	response, err := resty.R().
 		SetHeader("Content-Type", "application/json").
-		SetHeader("X-Auth-Token", getToken(t)).
+		SetHeader("Authorization", fmt.Sprintf("Bearer %s", accessToken)).
 		Post("http://localhost:8080/user/one-time-pin")
+
+	t.Log(accessToken)
 	assert.Nil(t, err, "Not expecting an error")
 	var pin map[string]string
 	err = json.Unmarshal(response.Body(), &pin)

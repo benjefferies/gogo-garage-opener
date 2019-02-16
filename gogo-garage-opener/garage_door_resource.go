@@ -25,7 +25,7 @@ func (garageDoorResource GarageDoorResource) register(router *mux.Router) {
 	subRouter := router.PathPrefix("/garage").Subrouter()
 
 	subRouter.Path("/toggle").Methods("POST").Handler(jwtCheckHandleFunc(garageDoorResource.toggleGarage))
-	subRouter.Path("/state").Methods("GET").Headers("Content-Type", "application/json").Handler(jwtCheckHandleFunc(garageDoorResource.getState))
+	subRouter.Path("/state").Methods("GET").Handler(jwtCheckHandleFunc(garageDoorResource.getState))
 	subRouter.Path("/one-time-pin/{oneTimePin}").Methods("POST").HandlerFunc(garageDoorResource.useOneTimePin)
 }
 
