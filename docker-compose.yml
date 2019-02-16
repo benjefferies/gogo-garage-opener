@@ -16,7 +16,7 @@ services:
             max-size: 50m
   gogo-garage-opener:
     privileged: true
-    image: "benjefferies/gogo-garage-opener"
+    image: "benjjefferies/gogo-garage-opener"
     volumes:
     - /var/gogo-garage-opener/gogo-garage-opener.db:/var/gogo-garage-opener/gogo-garage-opener.db
     environment:
