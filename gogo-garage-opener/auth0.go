@@ -6,11 +6,19 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
+
+	"github.com/patrickmn/go-cache"
 
 	log "github.com/Sirupsen/logrus"
 )
 
+var emailCache = cache.New(60*time.Minute, 120*time.Minute)
+
 func getEmail(accessToken string) string {
+	if email, found := emailCache.Get(accessToken); found {
+		return email.(string)
+	}
 	req, err := http.NewRequest("GET", "https://gogo-garage-opener.eu.auth0.com/userinfo", nil)
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", accessToken))
 	client := &http.Client{}
@@ -36,5 +44,7 @@ func getEmail(accessToken string) string {
 	if err != nil {
 		panic(errors.New("Could not get email marshelled user info"))
 	}
-	return string(json)
+	email := string(json)
+	emailCache.Set(accessToken, email, cache.DefaultExpiration)
+	return email
 }
