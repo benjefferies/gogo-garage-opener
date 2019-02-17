@@ -49,11 +49,7 @@ func main() {
 	defer doorController.close()
 	garageDoorResource := GarageDoorResource{userDao: userDao, pinDao: pinDao, doorController: doorController}
 	router := mux.NewRouter()
-
-	router.PathPrefix("/abc").Subrouter().Path("/test").Methods("POST").Handler(jwtCheckHandleFunc(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		message := "Hello from a private endpoint! You need to be authenticated to see this."
-		fmt.Fprint(w, message)
-	})))
+	
 	userResource.register(router)
 	garageDoorResource.register(router)
 

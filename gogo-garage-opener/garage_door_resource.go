@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
@@ -67,7 +68,17 @@ func (garageDoorResource GarageDoorResource) toggleGarage(w http.ResponseWriter,
 	accessToken := context.Get(r, "access_token")
 	email := getEmail(fmt.Sprintf("%s", accessToken))
 	log.Infof("%s is opening or closing garage", email)
-	garageDoorResource.doorController.toggleDoor()
+	vars := r.URL.Query()
+	autoclose := vars.Get("autoclose")
+	go func() {
+		garageDoorResource.doorController.toggleDoor()
+		if len(autoclose) != 0 {
+			log.Infof("%s is autoclosing garage in %s", email, autoclose)
+			sleepTime, _ := strconv.ParseInt(autoclose, 0, 64)
+			time.Sleep(time.Duration(sleepTime) * time.Second)
+			garageDoorResource.doorController.toggleDoor()
+		}
+	}()
 	w.WriteHeader(202)
 }
 
