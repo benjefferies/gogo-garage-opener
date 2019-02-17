@@ -49,7 +49,7 @@ func main() {
 	defer doorController.close()
 	garageDoorResource := GarageDoorResource{userDao: userDao, pinDao: pinDao, doorController: doorController}
 	router := mux.NewRouter()
-	
+
 	userResource.register(router)
 	garageDoorResource.register(router)
 

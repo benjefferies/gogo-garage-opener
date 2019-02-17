@@ -72,10 +72,9 @@ func (garageDoorResource GarageDoorResource) toggleGarage(w http.ResponseWriter,
 	autoclose := vars.Get("autoclose")
 	go func() {
 		garageDoorResource.doorController.toggleDoor()
-		if len(autoclose) != 0 {
-			log.Infof("%s is autoclosing garage in %s", email, autoclose)
-			sleepTime, _ := strconv.ParseInt(autoclose, 0, 64)
-			time.Sleep(time.Duration(sleepTime) * time.Second)
+		if autocloseBool, _ := strconv.ParseBool(autoclose); autocloseBool {
+			log.Infof("%s is autoclosing garage in 60s", email)
+			time.Sleep(60 * time.Second)
 			garageDoorResource.doorController.toggleDoor()
 		}
 	}()
