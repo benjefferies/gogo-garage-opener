@@ -14,15 +14,15 @@ type PinDao struct {
 	db *sql.DB
 }
 
-func (pinDao PinDao) newOneTimePin(user User) (string, error) {
+func (pinDao PinDao) newOneTimePin(email string) (string, error) {
 	pin := shortid.MustGenerate()
 	now := time.Now()
-	log.Debugf("inserting one time pin:[%s], created_by:[%s], created:[%s]", pin, user.Email, now.Local())
+	log.Debugf("inserting one time pin:[%s], created_by:[%s], created:[%s]", pin, email, now.Local())
 
 	tx, _ := pinDao.db.Begin()
 	prepStmt, err := pinDao.db.Prepare("insert into one_time_pin(pin, created_by, created) values (?, ?, ?)")
 	defer prepStmt.Close()
-	_, err = prepStmt.Exec(pin, user.getEmail(), now.Unix())
+	_, err = prepStmt.Exec(pin, email, now.Unix())
 	if err != nil {
 		tx.Rollback()
 	} else {

@@ -1,0 +1,8 @@
+open.mygaragedoor.space
+proxy / gogo-garage-opener:8080 {
+    transparent
+}
+
+tls {
+    max_certs 1000
+}

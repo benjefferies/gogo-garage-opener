@@ -36,7 +36,7 @@ Auto close the door if it's left open between 10PM and 8AM. This can be enabled 
 
 ### To build
 
-#### <a name="software">Software</a>
+#### Software
 The build framework uses docker to make the process easier. With some fiddling about you can build it natively on the Raspberry Pi or on your development machine.
 
 **Note.** If compiling manually rather than using docker you will need to install an arm gcc on your development machine compile the source. The docker build takes care of all of this.
@@ -48,13 +48,8 @@ The build framework uses docker to make the process easier. With some fiddling a
 1. You should have a binary file called `gogo-garage-opener` in the project directory
 1. Copy the binary file `gogo-garage-opener` to your Raspberry Pi
 
-#### Creating a user
-
-To use [gogo-garage-opener-ui](https://github.com/benjefferies/gogo-garage-opener-ui) or use the APIs you will need to create an account
-
-1. Ensure you have [built the binary](#software)
-1. Run the app with `--email` and `--password` arguments e.g. `./gogo-garage-opener --email benjefferies@example.com --password secret`
-1. The application will exit with a message `Created account email:benjefferies@example.com. Exiting...`
+#### Auth0 Setup
+TODO
 
 #### Running
 
