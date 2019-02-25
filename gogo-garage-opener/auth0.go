@@ -10,7 +10,7 @@ import (
 
 	"github.com/patrickmn/go-cache"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 var emailCache = cache.New(60*time.Minute, 120*time.Minute)
