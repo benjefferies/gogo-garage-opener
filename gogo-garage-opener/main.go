@@ -55,26 +55,27 @@ func main() {
 	server := &http.Server{Addr: ":" + strconv.Itoa(*portFlag), Handler: router}
 	if *notification > time.Second*0 {
 		log.Infof("Monitoring garage door to send alerts")
-		go monitorDoor(doorController, userDao)
+		go leftOpenAlertMonitoring(doorController, userDao)
 	}
 
 	if *autoclose {
 		log.Infof("Monitoring garage door to autoclose")
-		go func() {
-			autoclose := NewAutoclose(doorController)
-			for true {
-				now := time.Now()
-				if autoclose.autoClose(now) {
-					sendMail(userDao, "Autoclose: Garage door left open", fmt.Sprintf("Garage door appears to be left open at %s", now.Format("3:04 PM")))
-				}
-				time.Sleep(time.Minute)
-			}
-		}()
+		go autoCloseMonitoring(doorController, userDao)
 	}
 	log.Fatal(server.ListenAndServe())
 }
 
-func monitorDoor(doorController DoorController, userDao UserDao) {
+func autoCloseMonitoring(doorController DoorController, userDao UserDao) {
+	autoclose := NewAutoclose(doorController)
+	for true {
+		if autoclose.autoClose() {
+			sendMail(userDao, "Autoclose: Garage door left open", fmt.Sprintf("Garage door appears to be left open at %s", time.Now().Format("3:04 PM")))
+		}
+		time.Sleep(time.Minute)
+	}
+}
+
+func leftOpenAlertMonitoring(doorController DoorController, userDao UserDao) {
 	nilTime := time.Time{}
 	lastOpened := nilTime
 	for true {

@@ -8,35 +8,44 @@ import (
 
 // Autoclose is to auto close the garage door
 type Autoclose struct {
-	lastOpen       time.Time
-	doorController DoorController
+	openDuration    time.Duration
+	shouldCloseTime time.Time
+	canStayOpenTime time.Time
+	doorController  DoorController
 }
 
-// NewAutoclose AutoClose with default lastOpen set to max date
+// NewAutoclose AutoClose with default openDuration set to zero and closing time between 10pm-8am
 func NewAutoclose(doorcontroller DoorController) Autoclose {
-	return Autoclose{lastOpen: time.Unix(1<<63-1, 0), doorController: doorcontroller}
-}
-
-func (autoclose Autoclose) shouldClose(now time.Time) bool {
+	now := time.Now()
 	shouldClose := time.Date(now.Year(), now.Month(), now.Day(), 22, 0, 0, 0, time.Local)
 	canStayOpen := time.Date(now.Year(), now.Month(), now.Day(), 8, 0, 0, 0, time.Local)
-	openTooLong := now.Sub(autoclose.lastOpen) > 2*time.Minute
-	if openTooLong && (now.After(shouldClose) || now.Before(canStayOpen)) {
+	return Autoclose{openDuration: time.Minute * 0, doorController: doorcontroller, shouldCloseTime: shouldClose, canStayOpenTime: canStayOpen}
+}
+
+func (autoclose Autoclose) shouldClose() bool {
+	now := time.Now()
+	openTooLong := autoclose.openDuration > time.Minute*2
+	if openTooLong && now.After(autoclose.shouldCloseTime) && now.Before(autoclose.canStayOpenTime) {
 		return true
 	}
 	return false
 }
 
-func (autoclose Autoclose) autoClose(now time.Time) bool {
-	shouldClose := autoclose.shouldClose(now)
+func (autoclose *Autoclose) autoClose() bool {
 	state := autoclose.doorController.getDoorState()
+	if state == closed {
+		autoclose.openDuration = time.Minute * 0
+		return false
+	}
+
+	shouldClose := autoclose.shouldClose()
 	log.Infof("Autoclose shouldClose=%t state=%b", shouldClose, state)
-	if state == open {
-		autoclose.lastOpen = time.Now()
-		if shouldClose {
-			autoclose.doorController.toggleDoor()
-		}
+	if shouldClose {
+		autoclose.doorController.toggleDoor()
+		autoclose.openDuration = time.Minute * 0
 		return true
 	}
+	autoclose.openDuration = autoclose.openDuration + time.Minute // Time increase needs to be in sync with sleep time
+	log.Infof("Increased openDuration=%d", autoclose.openDuration)
 	return false
 }
