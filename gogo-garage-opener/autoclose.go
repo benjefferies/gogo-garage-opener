@@ -25,7 +25,9 @@ func NewAutoclose(doorcontroller DoorController) Autoclose {
 func (autoclose Autoclose) shouldClose() bool {
 	now := time.Now()
 	openTooLong := autoclose.openDuration > time.Minute*2
-	if openTooLong && now.After(autoclose.shouldCloseTime) && now.Before(autoclose.canStayOpenTime) {
+	shouldClose := now.After(autoclose.shouldCloseTime)
+	canStayOpen := now.Before(autoclose.canStayOpenTime)
+	if shouldClose && openTooLong && !canStayOpen {
 		return true
 	}
 	return false
