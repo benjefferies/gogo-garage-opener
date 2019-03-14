@@ -16,19 +16,19 @@ type AutoCloseDoorController struct {
 // toggleDoor is noop for testing
 func (autoCloseDoorController *AutoCloseDoorController) toggleDoor() {
 	if autoCloseDoorController.state == closed {
-		log.Infof("Opening door before state=%b", autoCloseDoorController.state)
+		log.WithField("state", autoCloseDoorController.state).Info("Opening door before")
 		autoCloseDoorController.state = open
-		log.Infof("Opening door after state=%b", autoCloseDoorController.state)
+		log.WithField("state", autoCloseDoorController.state).Info("Closing door after")
 	} else {
-		log.Infof("Closing door before state=%b", autoCloseDoorController.state)
+		log.WithField("state", autoCloseDoorController.state).Info("Closing door before")
 		autoCloseDoorController.state = closed
-		log.Infof("Opening door after state=%b", autoCloseDoorController.state)
+		log.WithField("state", autoCloseDoorController.state).Info("Opening door after")
 	}
 }
 
 // getDoorState is noop for testing always returning closed
 func (autoCloseDoorController AutoCloseDoorController) getDoorState() DoorState {
-	log.Infof("Getting state=%b", autoCloseDoorController.state)
+	log.WithField("state", autoCloseDoorController.state).Info("Getting state")
 	return autoCloseDoorController.state
 }
 
@@ -66,7 +66,7 @@ func TestShouldAutoCloseAfterShouldCloseTime(t *testing.T) {
 
 	autoclose.autoClose()
 
-	assert.Equal(t, closed, controller.getDoorState(), "Should be closed")
+	assert.True(t, controller.getDoorState().isClosed(), "Should be closed")
 }
 
 func TestShouldAutoCloseWhenShouldCloseTimeAfterCanStayOpenTime(t *testing.T) {
@@ -78,7 +78,7 @@ func TestShouldAutoCloseWhenShouldCloseTimeAfterCanStayOpenTime(t *testing.T) {
 
 	autoclose.autoClose()
 
-	assert.Equal(t, closed, controller.getDoorState(), "Should be closed")
+	assert.True(t, controller.getDoorState().isClosed(), "Should be closed")
 }
 
 func TestShouldNotAutoCloseBeforeShouldCloseTime(t *testing.T) {
@@ -90,7 +90,7 @@ func TestShouldNotAutoCloseBeforeShouldCloseTime(t *testing.T) {
 
 	autoclose.autoClose()
 
-	assert.Equal(t, open, controller.getDoorState(), "Should not be closed")
+	assert.True(t, controller.getDoorState().isOpen(), "Should not be closed")
 }
 
 func TestShouldAutoCloseBeforeCanStayOpenTime(t *testing.T) {
@@ -102,7 +102,7 @@ func TestShouldAutoCloseBeforeCanStayOpenTime(t *testing.T) {
 
 	autoclose.autoClose()
 
-	assert.Equal(t, closed, controller.getDoorState(), "Should be closed")
+	assert.True(t, controller.getDoorState().isClosed(), "Should be closed")
 }
 
 func TestShouldNotOpenAfterShouldCloseTime(t *testing.T) {
@@ -114,7 +114,7 @@ func TestShouldNotOpenAfterShouldCloseTime(t *testing.T) {
 
 	autoclose.autoClose()
 
-	assert.Equal(t, closed, controller.getDoorState(), "Should be closed")
+	assert.True(t, controller.getDoorState().isClosed(), "Should be closed")
 }
 
 func TestShouldNotCloseShouldCloseTimeWhenLeftOpenFor1Minutes(t *testing.T) {
@@ -126,7 +126,7 @@ func TestShouldNotCloseShouldCloseTimeWhenLeftOpenFor1Minutes(t *testing.T) {
 
 	autoclose.autoClose()
 
-	assert.Equal(t, open, controller.getDoorState(), "Should not be closed")
+	assert.True(t, controller.getDoorState().isOpen(), "Should not be closed")
 }
 
 func TestShouldCloseAfterShouldCloseWhenLeftOpenFor3Minutes(t *testing.T) {
@@ -138,7 +138,7 @@ func TestShouldCloseAfterShouldCloseWhenLeftOpenFor3Minutes(t *testing.T) {
 
 	autoclose.autoClose()
 
-	assert.Equal(t, closed, controller.getDoorState(), "Should be closed")
+	assert.True(t, controller.getDoorState().isClosed(), "Should be closed")
 }
 
 func TestShouldReturnTrueWhenClose(t *testing.T) {
@@ -173,8 +173,6 @@ func TestIncreaseOpenDurationWhenNotClosed(t *testing.T) {
 	autoclose := Autoclose{openDuration: time.Minute * 1, doorController: controller, shouldCloseTime: shouldClose, canStayOpenTime: canStayOpen}
 
 	autoclose.autoClose()
-
-	log.Infof("OpenDuration in test is %d", autoclose.openDuration)
 
 	assert.Equal(t, time.Minute*2, autoclose.openDuration, "Should increase open duration from 1 to 2 minutes")
 }

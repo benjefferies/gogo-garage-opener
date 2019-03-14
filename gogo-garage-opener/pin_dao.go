@@ -17,7 +17,7 @@ type PinDao struct {
 func (pinDao PinDao) newOneTimePin(email string) (string, error) {
 	pin := shortid.MustGenerate()
 	now := time.Now()
-	log.Debugf("inserting one time pin:[%s], created_by:[%s], created:[%s]", pin, email, now.Local())
+	log.WithField("one_time_pin", pin).WithField("email", email).WithField("created", now.Local()).Debug("inserting one time pin")
 
 	tx, _ := pinDao.db.Begin()
 	prepStmt, err := pinDao.db.Prepare("insert into one_time_pin(pin, created_by, created) values (?, ?, ?)")
@@ -33,7 +33,7 @@ func (pinDao PinDao) newOneTimePin(email string) (string, error) {
 
 func (pinDao PinDao) use(pin string) error {
 	now := time.Now()
-	log.Debugf("using one time pin: [%s] at: [%s]", pin, now.Local())
+	log.WithField("one_time_pin", pin).WithField("time", now.Local()).Debug("using one time pin")
 
 	tx, _ := pinDao.db.Begin()
 	prepStmt, err := pinDao.db.Prepare("update one_time_pin set used = ? where pin = ? and used is null")
@@ -53,7 +53,7 @@ func (pinDao PinDao) use(pin string) error {
 }
 
 func (pinDao PinDao) getPinUsedDate(pin string) (int64, error) {
-	log.Debugf("Getting used date for pin: [%s]", pin)
+	log.WithField("one_time_pin", pin).Debug("Getting used date for pin")
 
 	tx, _ := pinDao.db.Begin()
 	prepStmt, err := pinDao.db.Prepare("select used from one_time_pin where pin = ?")
@@ -62,7 +62,7 @@ func (pinDao PinDao) getPinUsedDate(pin string) (int64, error) {
 	var usedDate int64
 	row.Scan(&usedDate)
 	if err != nil {
-		log.WithError(err).Errorf("Could not get pin used date for [%s]", pin)
+		log.WithError(err).WithField("one_time_pin", pin).Error("Could not get pin used date")
 		tx.Rollback()
 	}
 	tx.Commit()

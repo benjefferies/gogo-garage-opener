@@ -30,16 +30,15 @@ func NewRaspberryPiDoorController(relayPinID int, contactSwitchPinID int) Raspbe
 func (raspberryPiDoorController RaspberryPiDoorController) toggleDoor() {
 	// Toggle pin on/off
 	raspberryPiDoorController.relayPin.Toggle()
-	log.Infof("Toggle relay switch on")
+	log.Info("Toggle relay switch on")
 	time.Sleep(time.Millisecond * 500)
 	raspberryPiDoorController.relayPin.Toggle()
-	log.Infof("Toggle relay switch off")
+	log.Info("Toggle relay switch off")
 }
 
 // Get the state of the garage door
 func (raspberryPiDoorController RaspberryPiDoorController) getDoorState() DoorState {
-
-	log.Debugf("Using pin %d to read contact switch pin", raspberryPiDoorController.contactSwitchPin)
+	log.WithField("contact_switch_pin", raspberryPiDoorController.contactSwitchPin).Debug("Using pin to read contact switch pin")
 	pin := rpio.Pin(raspberryPiDoorController.contactSwitchPin)
 	// Open and map  memory to access gpio, check for errors
 	if err := rpio.Open(); err != nil {
@@ -48,12 +47,8 @@ func (raspberryPiDoorController RaspberryPiDoorController) getDoorState() DoorSt
 
 	// Read state
 	state := pin.Read()
-	log.Infof("Sensor reading state: %v", state)
-	doorState := int8(state)
-	if doorState == int8(closed) {
-		return closed
-	}
-	return open
+	log.WithField("state", state).Info("Sensor reading state")
+	return DoorState(state)
 }
 
 // Close rpio

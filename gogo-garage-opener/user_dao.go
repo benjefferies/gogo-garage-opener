@@ -12,17 +12,17 @@ type UserDao struct {
 }
 
 func (userDao UserDao) createUser(email string) {
-	log.Debugf("inserting user, email:[%s]", email)
+	log.WithField("email", email).Debug("inserting user")
 
 	tx, _ := userDao.db.Begin()
 	prepStmt, err := userDao.db.Prepare("insert into user(email) SELECT ? WHERE NOT EXISTS(SELECT 1 FROM user WHERE email = ?);")
 	if err != nil {
-		log.Error(err)
+		log.WithError(err).Error("Could prepare statement to create user")
 	}
 	defer prepStmt.Close()
 	_, err = prepStmt.Exec(email, email)
 	if err != nil {
-		log.Error(err)
+		log.WithError(err).Error("Could not create user")
 		tx.Rollback()
 	} else {
 		tx.Commit()
@@ -30,7 +30,7 @@ func (userDao UserDao) createUser(email string) {
 }
 
 func (userDao UserDao) getUserByEmail(email string) User {
-	log.Debugf("getting user for email [%s]", email)
+	log.WithField("email", email).Debug("getting user")
 
 	tx, _ := userDao.db.Begin()
 	rows, _ := userDao.db.Query("select lower(email) from user where lower(email) = lower(?)", email)
@@ -42,7 +42,7 @@ func (userDao UserDao) getUserByEmail(email string) User {
 }
 
 func (userDao UserDao) getUserByToken(token string) User {
-	log.Debugf("getting user for token [%s]", token)
+	log.WithField("token", token).Debug("getting user")
 
 	tx, _ := userDao.db.Begin()
 	rows, _ := userDao.db.Query("select lower(email) from user where token = ?", token)
@@ -61,7 +61,7 @@ func (userDao UserDao) getSubscribedUserEmails() []string {
 	for rows.Next() {
 		var userEmail string
 		rows.Scan(&userEmail)
-		log.Debugf("Found user %v", emails)
+		log.WithField("email", userEmail).Debug("Found user")
 		emails = append(emails, userEmail)
 	}
 	tx.Commit()
@@ -74,14 +74,14 @@ func getUserFromRows(rows *sql.Rows) User {
 
 		rows.Scan(&userEmail)
 		user := User{Email: userEmail}
-		log.Debugf("Found user %v", user)
+		log.WithField("email", user.Email).Debug("Found user")
 		return user
 	}
 	return User{}
 }
 
 func (userDao UserDao) setToken(user User) {
-	log.Debugf("Updating token [%s]  for email [%s]", user.Token, user.Email)
+	log.WithField("token", user.Token).WithField("email", user.Email).Debug("Updating token")
 
 	tx, _ := userDao.db.Begin()
 	prepStmt, err := userDao.db.Prepare("update user set token = ? where email = ?;")
@@ -96,7 +96,7 @@ func (userDao UserDao) setToken(user User) {
 }
 
 func (userDao UserDao) tokenExists(token string) bool {
-	log.Debugf("Checking valid token [%s]", token)
+	log.WithField("token", token).Debug("Checking valid token")
 
 	tx, _ := userDao.db.Begin()
 	rows, _ := userDao.db.Query("select 1 from user where token = ?", token)

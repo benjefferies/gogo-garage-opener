@@ -38,7 +38,7 @@ func getAccessToken() string {
 	res, _ := http.DefaultClient.Do(req)
 	var accessToken map[string]interface{}
 	body, err := ioutil.ReadAll(res.Body)
-	log.Infof("Got %s", body)
+	log.WithField("body", string(body)).Info("Response for userinfo")
 	if err != nil {
 		panic(errors.New("Could not parse user info"))
 	}
@@ -64,7 +64,7 @@ func TestMain(m *testing.M) {
 		log.WithError(err).Fatal("Application is not initialised")
 	}
 	m.Run()
-	log.Info("Started server")
+	log.Info("Started server in integration test")
 	err = os.Remove("gogo-garage-opener.db")
 	if err != nil {
 		log.WithError(err).Fatal("Could not delete database file")
@@ -135,14 +135,18 @@ func TestGarageStatus(t *testing.T) {
 	response, err := resty.R().
 		SetHeader("Content-Type", "application/json").
 		SetHeader("Authorization", fmt.Sprintf("Bearer %s", accessToken)).
+		SetResult(map[string]interface{}{}).
 		Get("http://localhost:8080/garage/state")
 
 	assert.Nil(t, err, "Not expecting an error")
 	assert.Equal(t, 200, response.StatusCode(), "Expecting OK http status")
+	result := (*response.Result().(*map[string]interface{}))
+	assert.Equal(t, fmt.Sprintf("%v", closed), fmt.Sprintf("%.f", result["State"]), "Expecting closed status")
+	assert.Equal(t, "Closed", result["Description"], "Expecting closed description")
 }
 
 func getToken(t *testing.T) string {
-	db, err := sql.Open("sqlite3", *databaseFlag)
+	db, err := sql.Open("sqlite3", *database)
 	assert.Nil(t, err, "Not expecting an error")
 	db.Begin()
 	row := db.QueryRow("select token from user where email = ?", "test@example.com")
@@ -153,7 +157,7 @@ func getToken(t *testing.T) string {
 }
 
 func getPin(t *testing.T) string {
-	db, err := sql.Open("sqlite3", *databaseFlag)
+	db, err := sql.Open("sqlite3", *database)
 	assert.Nil(t, err, "Not expecting an error")
 	db.Begin()
 	row := db.QueryRow("select pin from one_time_pin where email = ?", "test@example.com")

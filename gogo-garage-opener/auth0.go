@@ -32,7 +32,7 @@ func getEmail(accessToken string) string {
 	}
 	var userInfo map[string]*json.RawMessage
 	body, err := ioutil.ReadAll(resp.Body)
-	log.Infof("Got %s", body)
+	log.WithField("body", string(body)).Debug("Response from auth0 userinfo")
 	if err != nil {
 		panic(errors.New("Could not parse user info"))
 	}

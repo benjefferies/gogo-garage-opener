@@ -35,19 +35,19 @@ func (autoclose Autoclose) shouldClose() bool {
 
 func (autoclose *Autoclose) autoClose() bool {
 	state := autoclose.doorController.getDoorState()
-	if state == closed {
+	if state.isClosed() {
 		autoclose.openDuration = time.Minute * 0
 		return false
 	}
 
 	shouldClose := autoclose.shouldClose()
-	log.Infof("Autoclose shouldClose=%t state=%b", shouldClose, state)
+	log.WithField("shouldClose", shouldClose).WithField("state", state).Debug("Evaluating autoclose")
 	if shouldClose {
 		autoclose.doorController.toggleDoor()
 		autoclose.openDuration = time.Minute * 0
 		return true
 	}
 	autoclose.openDuration = autoclose.openDuration + time.Minute // Time increase needs to be in sync with sleep time
-	log.Infof("Increased openDuration=%d", autoclose.openDuration)
+	log.WithField("openDuration", autoclose.openDuration).Debug("Open duration increased")
 	return false
 }

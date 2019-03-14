@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"time"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
+	log "github.com/sirupsen/logrus"
 )
 
 // timeToClose time to automatically close the door after opening with pin
@@ -33,20 +33,20 @@ func (garageDoorResource GarageDoorResource) register(router *mux.Router) {
 func (garageDoorResource GarageDoorResource) useOneTimePin(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	oneTimePin := vars["oneTimePin"]
-	log.Infof("Using one time pin: [%s] to toggle garage", oneTimePin)
+	log.WithField("one_time_pin", oneTimePin).Info("Using one time pin to toggle garage")
 	usedDate, err := garageDoorResource.pinDao.getPinUsedDate(oneTimePin)
 	if usedDate > 0 {
-		log.Infof("Pin has already been used")
+		log.Info("Pin has already been used")
 		w.WriteHeader(401)
 		fmt.Fprintf(w, "Pin has already been used")
 	} else if err != nil {
-		log.WithError(err).Errorf("Could not get pin used date for [%s]", oneTimePin)
+		log.WithError(err).WithField("one_time_pin", oneTimePin).Error("Could not get pin used date")
 		w.WriteHeader(500)
 		fmt.Fprintf(w, "Failed to open garage")
 	} else {
 		err = garageDoorResource.pinDao.use(oneTimePin)
 		if err != nil {
-			log.WithError(err).Errorf("Could not use pin: [%s]", oneTimePin)
+			log.WithError(err).WithField("one_time_pin", oneTimePin).Error("Could not use pin")
 			w.WriteHeader(401)
 			fmt.Fprintf(w, "Pin has already been used")
 			return
@@ -60,20 +60,20 @@ func (garageDoorResource GarageDoorResource) useOneTimePin(w http.ResponseWriter
 
 func (garageDoorResource GarageDoorResource) closeGarage(pin string) {
 	time.Sleep(timeToClose)
-	log.Infof("Closing garage for pin: [%s]", pin)
+	log.WithField("one_time_pin", pin).Info("Closing garage")
 	garageDoorResource.doorController.toggleDoor()
 }
 
 func (garageDoorResource GarageDoorResource) toggleGarage(w http.ResponseWriter, r *http.Request) {
 	accessToken := context.Get(r, "access_token")
 	email := getEmail(fmt.Sprintf("%s", accessToken))
-	log.Infof("%s is opening or closing garage", email)
+	log.WithField("email", email).Info("opening or closing garage")
 	vars := r.URL.Query()
 	autoclose := vars.Get("autoclose")
 	go func() {
 		garageDoorResource.doorController.toggleDoor()
 		if autocloseBool, _ := strconv.ParseBool(autoclose); autocloseBool {
-			log.Infof("%s is autoclosing garage in 60s", email)
+			log.WithField("email", email).Info("autoclosing garage in 60s")
 			time.Sleep(60 * time.Second)
 			garageDoorResource.doorController.toggleDoor()
 		}
@@ -85,5 +85,9 @@ func (garageDoorResource GarageDoorResource) getState(w http.ResponseWriter, r *
 	log.Debug("Getting garage state")
 	state := garageDoorResource.doorController.getDoorState()
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(*newState(state))
+	stateResponse := map[string]interface{}{
+		"State":       state,
+		"Description": state.description(),
+	}
+	json.NewEncoder(w).Encode(stateResponse)
 }

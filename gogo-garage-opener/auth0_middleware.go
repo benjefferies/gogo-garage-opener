@@ -13,14 +13,12 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type Response struct {
-	Message string `json:"message"`
-}
-
+// Jwks contains an array of JWKs
 type Jwks struct {
 	Keys []JSONWebKeys `json:"keys"`
 }
 
+// JSONWebKeys is a struct for a JWK
 type JSONWebKeys struct {
 	Kty string   `json:"kty"`
 	Kid string   `json:"kid"`
@@ -30,6 +28,7 @@ type JSONWebKeys struct {
 	X5c []string `json:"x5c"`
 }
 
+// CustomClaims JWT claims
 type CustomClaims struct {
 	Scope string `json:"scope"`
 	jwt.StandardClaims
@@ -42,13 +41,13 @@ func jwtCheckHandleFunc(httpFunc http.HandlerFunc) *negroni.Negroni {
 			aud := "https://open.mygaragedoor.space/api"
 			checkAud := token.Claims.(jwt.MapClaims).VerifyAudience(aud, false)
 			if !checkAud {
-				return token, errors.New("Invalid audience.")
+				return token, errors.New("invalid audience")
 			}
 			// Verify 'iss' claim
 			iss := "https://gogo-garage-opener.eu.auth0.com/"
 			checkIss := token.Claims.(jwt.MapClaims).VerifyIssuer(iss, false)
 			if !checkIss {
-				return token, errors.New("Invalid issuer.")
+				return token, errors.New("invalid issuer")
 			}
 
 			cert, err := getPemCert(token)
@@ -79,7 +78,7 @@ func jwtCheckHandleFunc(httpFunc http.HandlerFunc) *negroni.Negroni {
 
 func exportAccessToken(w http.ResponseWriter, r *http.Request) {
 	reqToken := r.Header.Get("Authorization")
-	log.Infof("Got %s", reqToken)
+	log.WithField("access_token", reqToken).Info("Got access token")
 	splitToken := strings.Split(reqToken, "Bearer ")
 	accessToken := splitToken[1]
 	context.Set(r, "access_token", accessToken)
@@ -108,7 +107,7 @@ func getPemCert(token *jwt.Token) (string, error) {
 	}
 
 	if cert == "" {
-		err := errors.New("unable to find appropriate key.")
+		err := errors.New("unable to find appropriate key")
 		return cert, err
 	}
 

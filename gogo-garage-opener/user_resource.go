@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
+	log "github.com/sirupsen/logrus"
 )
 
 // oneTimePinUse static html of one time pin page
@@ -41,10 +41,10 @@ func (userResource UserResource) register(router *mux.Router) {
 }
 
 func (userResource UserResource) oneTimePin(w http.ResponseWriter, r *http.Request) {
-	log.Debugf("Creating new one time pin")
+	log.Debug("Creating new one time pin")
 	accessToken := context.Get(r, "access_token")
 	email := getEmail(fmt.Sprintf("%s", accessToken))
-	log.Debugf("%s is creating new one time pin", email)
+	log.WithField("email", email).Debug("creating new one time pin")
 	pin, err := userResource.pinDao.newOneTimePin(email)
 	if err != nil {
 		log.WithError(err).Error("Could not create one time pin")
@@ -61,6 +61,7 @@ func (userResource UserResource) oneTimePin(w http.ResponseWriter, r *http.Reque
 func (userResource UserResource) useOneTimePin(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	oneTimePin := vars["oneTimePin"]
+	log.WithField("one_time_pin", oneTimePin).Debug("Using one time pin")
 	w.WriteHeader(200)
 	w.Header().Set("Content-Type", "text/html")
 	fmt.Fprintf(w, oneTimePinUse, timeToClose.Seconds(), oneTimePin)
@@ -69,5 +70,6 @@ func (userResource UserResource) useOneTimePin(w http.ResponseWriter, r *http.Re
 func (userResource UserResource) login(w http.ResponseWriter, r *http.Request) {
 	accessToken := context.Get(r, "access_token")
 	email := getEmail(fmt.Sprintf("%s", accessToken))
+	log.WithField("email", email).Debug("User logged in")
 	userResource.userDao.createUser(email)
 }
