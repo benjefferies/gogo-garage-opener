@@ -35,31 +35,25 @@ Auto close the door if it's left open between 10PM and 8AM. This can be enabled 
 * [Docker](https://docs.docker.com/engine/installation/) installed
 
 ### To build
-
-#### Software
-The build framework uses docker to make the process easier. With some fiddling about you can build it natively on the Raspberry Pi or on your development machine.
-
-**Note.** If compiling manually rather than using docker you will need to install an arm gcc on your development machine compile the source. The docker build takes care of all of this.
-
-**Building using docker**
-
-1. Open up your command line tool and navigate to the project on your development machine
-1. Compile the project by running`docker build . --tag gogo-garage-opener-builder && docker run --rm -v "$PWD":/go/src/gogo-garage-opener -w /go/src/gogo-garage-opener gogo-garage-opener-builder:latest` (tested on linux)
-1. You should have a binary file called `gogo-garage-opener` in the project directory
-1. Copy the binary file `gogo-garage-opener` to your Raspberry Pi
+Look to [Dockerfile](./Dockerfile) for the latest instructions for building
 
 #### Auth0 Setup
-TODO
+Authentication has been setup using Auth0. More details can be found [here](./auth0/README.md)
 
 #### Running
 
-1. Ensure you have completed the [Hardware set up](#hardware)
-1. Run the application as root `sudo nohup ./gogo-garage-opener -s 15 -r 18 &`
-    * nohup will redirect the output from the application to a log file called nohup.out
-    * The -s argument tells the application which gpio pin the magnetic switch is hooked up to
-    * The -r argument tells the application which gpio pin the relay is hooked up to
-    
-**Note.** If you are considering making the application available over the internet you will want your credentials to be encrypted over SSL, this can be achieved with a reverse proxy such as ngnix or apache2 with the correct mod.
+The easier way to use gogo-garage-opener is by using the [docker image](https://cloud.docker.com/u/benjjefferies/repository/docker/benjjefferies/gogo-garage-opener) built on every commit
+
+1. Clone this repo on the raspberry pi
+1. Update [.env](.env)
+    * AWS_ACCESS_KEY_ID is your AWS access key used for sending email notifications
+    * AWS_SECRET_KEY  is your AWS secret key used for sending email notifications
+    * AWS_SES_ENDPOINT is the SES endpoint used for sending email notifications (more information https://aws.amazon.com/getting-started/tutorials/send-an-email/)
+    * AS is the domain of the authorisation server
+    * RS is the domain of the resource server (domain set for API in) and used in Caddy (reverse proxy
+    * RELAY the pin number used to toggle the relay
+    * SWITCH the pin number used to read from the contact switch
+1. Run the application `docker-compose up -d`
 
 #### Hardware
 
@@ -78,10 +72,10 @@ Wiring up the relay
 
 It should now look like the images below
 
-![Pins right view](img/pin1.jpg)
-![Relay switch](img/relay1.jpg)
-![Relay switch garage door opener wires](img/relay2.jpg)
-![Garage door opener wiring](img/door_opener.jpg)
+![Pins right view](https://i.imgur.com/jrU1R6c.jpg)
+![Relay switch](https://i.imgur.com/6KsMJDC.jpg)
+![Relay switch garage door opener wires](https://i.imgur.com/P8KZ5Vj.jpg)
+![Garage door opener wiring](https://i.imgur.com/UYSarP8.jpg)
 
 Wiring up the magnetic switch
 
@@ -93,8 +87,8 @@ Wiring up the magnetic switch
 1. Connect up the (brown/blue) GPIO pin 15 wire to a different terminal strip on the breadboard
 1. Connect one wire of the magnetic switch to the terminal strip for GPIO pin 9 and the other to the terminal strip for GPIO pin 15
 
-![Pins left view](./img/pin2.jpg)
-![Breadboard with magnetic switch wiring](img/breadboard.jpg)
+![Pins left view](https://i.imgur.com/uSChY65.jpg)
+![Breadboard with magnetic switch wiring](https://i.imgur.com/DVqXEzu.jpg)
 
 #### Future
 

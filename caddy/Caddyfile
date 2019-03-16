@@ -1,4 +1,4 @@
-open.mygaragedoor.space
+{$RS}
 proxy / gogo-garage-opener:8080 {
     transparent
 }
