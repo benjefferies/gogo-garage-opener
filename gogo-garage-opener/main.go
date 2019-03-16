@@ -21,6 +21,8 @@ var (
 	database         = flag.String("db", "gogo-garage-opener.db", "The database file")
 	notification     = flag.Duration("notification", time.Second*0, "The time to wait in minutes before sending a warning email")
 	autoclose        = flag.Bool("autoclose", true, "Should auto close between 10pm-8am")
+	rs               = flag.String("rs", "open.mygaragedoor.space", "Domain of the resource sever (raspberry pi)")
+	as               = flag.String("as", "gogo-garage-opener.eu.auth0.com", "Domain of the authorisation sever (auth0 api)")
 )
 
 func main() {
@@ -110,6 +112,8 @@ func logConfiguration() {
 		WithField("database", *database).
 		WithField("notification", *notification).
 		WithField("autoclose", *autoclose).
+		WithField("rs", *rs).
+		WithField("as", *as).
 		Debug("Configuration")
 }
 

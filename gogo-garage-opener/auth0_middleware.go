@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -38,13 +39,13 @@ func jwtCheckHandleFunc(httpFunc http.HandlerFunc) *negroni.Negroni {
 	jwtMiddleware := jwtmiddleware.New(jwtmiddleware.Options{
 		ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
 			// Verify 'aud' claim
-			aud := "https://open.mygaragedoor.space/api"
+			aud := fmt.Sprintf("https://%s/api", *rs)
 			checkAud := token.Claims.(jwt.MapClaims).VerifyAudience(aud, false)
 			if !checkAud {
 				return token, errors.New("invalid audience")
 			}
 			// Verify 'iss' claim
-			iss := "https://gogo-garage-opener.eu.auth0.com/"
+			iss := fmt.Sprintf("https://%s/", *as)
 			checkIss := token.Claims.(jwt.MapClaims).VerifyIssuer(iss, false)
 			if !checkIss {
 				return token, errors.New("invalid issuer")
@@ -86,7 +87,7 @@ func exportAccessToken(w http.ResponseWriter, r *http.Request) {
 
 func getPemCert(token *jwt.Token) (string, error) {
 	cert := ""
-	resp, err := http.Get("https://gogo-garage-opener.eu.auth0.com/.well-known/jwks.json")
+	resp, err := http.Get(fmt.Sprintf("https://%s/.well-known/jwks.json", *as))
 
 	if err != nil {
 		return cert, err

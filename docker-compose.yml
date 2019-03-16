@@ -29,6 +29,8 @@ services:
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_KEY=${AWS_SECRET_KEY}
       - AWS_SES_ENDPOINT=https://email.us-west-2.amazonaws.com
+      - RS=open.mygaragedoor.space
+      - AS=gogo-garage-opener.eu.auth0.com
     restart: always
     logging:
         driver: json-file

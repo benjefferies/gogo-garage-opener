@@ -19,7 +19,7 @@ func getEmail(accessToken string) string {
 	if email, found := emailCache.Get(accessToken); found {
 		return email.(string)
 	}
-	req, err := http.NewRequest("GET", "https://gogo-garage-opener.eu.auth0.com/userinfo", nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("https://%s/userinfo", *as), nil)
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", accessToken))
 	client := &http.Client{}
 	resp, err := client.Do(req)
