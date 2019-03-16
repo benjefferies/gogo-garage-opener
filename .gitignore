@@ -27,3 +27,8 @@ _testmain.go
 # idea
 .idea
 *iml
+
+#Caddyfiles
+caddy/hostname
+caddy/hosts
+caddy/resolv.conf
