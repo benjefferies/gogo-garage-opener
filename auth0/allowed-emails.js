@@ -1,5 +1,5 @@
 function (user, context, callback) {
-    var whitelist = ['benjjefferies@gmail.com', 'harrietwhite1992@gmail.com']; //authorized emails
+    var whitelist = ['example1@gmail.com', 'example2@gmail.com']; //authorized emails
     var userHasAccess = whitelist.some(
       function (email) {
         return user.email.toLowerCase() === email;

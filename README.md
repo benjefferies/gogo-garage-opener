@@ -6,9 +6,7 @@ Go implementation of a Raspberry Pi garage door opener
 
 ### Open garage door using a mobile app
 
-[Garage Opener on Play Store](https://play.google.com/store/apps/details?id=uk.echosoft.garageopener&hl=en_GB) ([source](https://github.com/benjefferies/gogo-garage-opener-android))
-
-Garage Opener for iPhone, Android App implemented using ionics framework ([source](https://github.com/benjefferies/gogo-garage-opener-ui))
+[Garage Opener on Play Store](https://play.google.com/store/apps/details?id=uk.echosoft.garage.opener) ([source](https://github.com/benjefferies/gogo-garage-opener-react-native))
 
 ### Use one time pin
 
@@ -21,13 +19,13 @@ It uses [AWS SES](https://aws.amazon.com/documentation/ses/) as an SMTP service 
 To configure the application to use your SES account you will need to set the environmental variables $AWS_ACCESS_KEY_ID, $AWS_SECRET_KEY and $AWS_SES_ENDPOINT environmental variables. See [go-ses](https://github.com/sourcegraph/go-ses#running-tests)
 
 ### Autoclose
-Auto close the door if it's left open between 10PM and 8AM. This can be enabled with the CLI argument -autoclose.
+Auto close the door if it's left open between 10PM and 8AM.
 
 ## Guide
 ### Prerequisites
 
 * Garage door opener I have an [EcoStar Liftronic 500](https://www.amazon.co.uk/gp/product/B00520C7M2/ref=oh_aui_detailpage_o03_s00?ie=UTF8&psc=1) but any model which will allow you to hook up a switch will work
-* Raspberry Pi (I am using model B) wired up to internet or local network
+* Raspberry Pi (I am using model B) wired up to internet
 * [Relay switch](https://www.amazon.co.uk/gp/product/B00J4FTWO2/ref=oh_aui_detailpage_o00_s00?ie=UTF8&psc=1)
 * Normal open [Magnetic switch](https://www.amazon.co.uk/gp/product/B0056K5ZC2/ref=oh_aui_detailpage_o00_s00?ie=UTF8&psc=1)
 * Small [solderless breadboard](https://www.amazon.co.uk/gp/product/B0040Z4QGA/ref=oh_aui_detailpage_o09_s00?ie=UTF8&psc=1)
