@@ -37,6 +37,7 @@ func (userResource UserResource) register(router *mux.Router) {
 	subRouter := router.PathPrefix("/user").Subrouter()
 	subRouter.Path("/login").Methods("POST").Handler(jwtCheckHandleFunc(userResource.login))
 	subRouter.Path("/one-time-pin").Methods("POST").Handler(jwtCheckHandleFunc(userResource.oneTimePin))
+	subRouter.Path("/one-time-pin").Methods("GET").Handler(jwtCheckHandleFunc(userResource.getOneTimePins))
 	subRouter.Path("/one-time-pin/{oneTimePin}").Methods("GET").HandlerFunc(userResource.useOneTimePin)
 }
 
@@ -49,6 +50,7 @@ func (userResource UserResource) oneTimePin(w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		log.WithError(err).Error("Could not create one time pin")
 		w.WriteHeader(500)
+		return
 	}
 	pinMap := map[string]interface{}{
 		"pin": pin,
@@ -65,6 +67,19 @@ func (userResource UserResource) useOneTimePin(w http.ResponseWriter, r *http.Re
 	w.WriteHeader(200)
 	w.Header().Set("Content-Type", "text/html")
 	fmt.Fprintf(w, oneTimePinUse, timeToClose.Seconds(), oneTimePin)
+}
+
+func (userResource UserResource) getOneTimePins(w http.ResponseWriter, r *http.Request) {
+	pins, err := userResource.pinDao.getPins()
+	if err != nil {
+		log.WithError(err).Error("Could not get one time pins")
+		w.WriteHeader(500)
+		return
+	}
+	log.WithField("pins", pins).Info("Got pins")
+	w.WriteHeader(200)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(pins)
 }
 
 func (userResource UserResource) login(w http.ResponseWriter, r *http.Request) {

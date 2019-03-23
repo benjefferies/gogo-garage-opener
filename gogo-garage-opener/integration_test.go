@@ -58,8 +58,9 @@ func TestMain(m *testing.M) {
 	accessToken = getAccessToken()
 	log.Info("Starting server")
 	go main()
+	authHeader := fmt.Sprintf("Bearer %s", accessToken)
 	err := retry.Retry(func(attempt uint) error {
-		_, err := resty.R().SetHeader("Authorization", fmt.Sprintf("Bearer %s", accessToken)).Get("http://localhost:8080/user/one-time-pin/my-pin")
+		_, err := resty.R().SetHeader("Authorization", authHeader).Get("http://localhost:8080/user/one-time-pin/my-pin")
 		return err
 	}, strategy.Limit(5), strategy.Delay(time.Second))
 	if err != nil {
@@ -75,71 +76,116 @@ func TestMain(m *testing.M) {
 }
 
 func TestOneTimePinAccess(t *testing.T) {
+	// Given
+	authHeader := fmt.Sprintf("Bearer %s", accessToken)
+
+	// When
 	response, err := resty.R().
-		SetHeader("Authorization", fmt.Sprintf("Bearer %s", accessToken)).
+		SetHeader("Authorization", authHeader).
 		Get("http://localhost:8080/user/one-time-pin/my-pin")
 
+	// Then
 	assert.Nil(t, err)
 	assert.Equal(t, 200, response.StatusCode(), "Expecting OK http status")
 	assert.Contains(t, string(response.Body()), "action=\"/garage/one-time-pin/my-pin\"", "Should contain link to use pin")
 }
 
 func TestNewOneTimePin(t *testing.T) {
+	// Given
+	authHeader := fmt.Sprintf("Bearer %s", accessToken)
+
+	// When
 	response, err := resty.R().
-		SetHeader("Authorization", fmt.Sprintf("Bearer %s", accessToken)).
+		SetHeader("Authorization", authHeader).
 		SetHeader("Content-Type", "application/json").
 		Post("http://localhost:8080/user/one-time-pin")
 
+	// Then
 	assert.Nil(t, err, "Not expecting an error")
 	assert.Equal(t, 200, response.StatusCode(), "Expecting OK http status")
 	assert.Contains(t, string(response.Body()), getPin(t), "Response should contain pin")
 }
 
+func TestGetOneTimePins(t *testing.T) {
+	// Given
+	authHeader := fmt.Sprintf("Bearer %s", accessToken)
+
+	// When
+	response, err := resty.R().
+		SetHeader("Authorization", authHeader).
+		SetHeader("Content-Type", "application/json").
+		Get("http://localhost:8080/user/one-time-pin")
+
+	// Then
+	var pins []Pin
+	json.Unmarshal(response.Body(), &pins)
+	assert.Nil(t, err, "Not expecting an error")
+	assert.Equal(t, 200, response.StatusCode(), "Expecting OK http status")
+	assert.Equal(t, pins[0].Pin, getPin(t), "Response should contain pin")
+	assert.Equal(t, pins[0].CreatedBy, "test@echosoft.uk", "Response should who created the pin")
+}
+
 func TestUseOneTimePin(t *testing.T) {
+	// Given
 	pin := getNewPin(t)
 
+	// When
 	response, err := resty.R().
 		SetHeader("Content-Type", "application/x-www-form-urlencoded").
 		SetHeader("Accept", "application/json").
 		Post("http://localhost:8080/garage/one-time-pin/" + pin)
 
+	// Then
 	assert.Nil(t, err, "Not expecting an error")
 	assert.Equal(t, 202, response.StatusCode(), "Expecting accepted http status")
 }
 
 func TestCannotUseOneTimePinTwice(t *testing.T) {
+	// Given
 	pin := getNewPin(t)
 	response, err := resty.R().
 		SetHeader("Content-Type", "application/x-www-form-urlencoded").
 		SetHeader("Accept", "application/json").
 		Post("http://localhost:8080/garage/one-time-pin/" + pin)
 
+	// When
 	response, err = resty.R().
 		SetHeader("Content-Type", "application/x-www-form-urlencoded").
 		SetHeader("Accept", "application/json").
 		Post("http://localhost:8080/garage/one-time-pin/" + pin)
 
+	// Then
 	assert.Nil(t, err, "Not expecting an error")
 	assert.Equal(t, 401, response.StatusCode(), "Should not be authorised")
 }
 
 func TestToggleGarage(t *testing.T) {
+	// Given
+	authHeader := fmt.Sprintf("Bearer %s", accessToken)
+
+	// When
 	response, err := resty.R().
 		SetHeader("Content-Type", "application/json").
-		SetHeader("Authorization", fmt.Sprintf("Bearer %s", accessToken)).
+		SetHeader("Authorization", authHeader).
 		Post("http://localhost:8080/garage/toggle")
 
+	// Then
 	assert.Nil(t, err, "Not expecting an error")
 	assert.Equal(t, 202, response.StatusCode(), "Expecting accepted http status")
 }
 
 func TestGarageStatus(t *testing.T) {
+	// Given
+	authHeader := fmt.Sprintf("Bearer %s", accessToken)
+
+	// When
 	response, err := resty.R().
 		SetHeader("Content-Type", "application/json").
-		SetHeader("Authorization", fmt.Sprintf("Bearer %s", accessToken)).
+		SetHeader("Authorization", authHeader).
 		SetResult(map[string]interface{}{}).
 		Get("http://localhost:8080/garage/state")
 
+	// Then
 	assert.Nil(t, err, "Not expecting an error")
 	assert.Equal(t, 200, response.StatusCode(), "Expecting OK http status")
 	result := (*response.Result().(*map[string]interface{}))
@@ -147,32 +193,24 @@ func TestGarageStatus(t *testing.T) {
 	assert.Equal(t, "Closed", result["Description"], "Expecting closed description")
 }
 
-func getToken(t *testing.T) string {
-	db, err := sql.Open("sqlite3", *database)
-	assert.Nil(t, err, "Not expecting an error")
-	db.Begin()
-	row := db.QueryRow("select token from user where email = ?", "test@example.com")
-	db.Close()
-	var token string
-	row.Scan(&token)
-	return token
-}
-
 func getPin(t *testing.T) string {
 	db, err := sql.Open("sqlite3", *database)
 	assert.Nil(t, err, "Not expecting an error")
 	db.Begin()
-	row := db.QueryRow("select pin from one_time_pin where email = ?", "test@example.com")
+	row := db.QueryRow("select pin from one_time_pin where created_by = ?", "test@echosoft.uk")
+	assert.NotEqual(t, row, sql.ErrNoRows, "Shouldn't be error")
 	db.Close()
 	var pin string
 	row.Scan(&pin)
+	log.WithField("pin", pin).Info("Found pin")
 	return pin
 }
 
 func getNewPin(t *testing.T) string {
+	authHeader := fmt.Sprintf("Bearer %s", accessToken)
 	response, err := resty.R().
 		SetHeader("Content-Type", "application/json").
-		SetHeader("Authorization", fmt.Sprintf("Bearer %s", accessToken)).
+		SetHeader("Authorization", authHeader).
 		Post("http://localhost:8080/user/one-time-pin")
 
 	t.Log(accessToken)

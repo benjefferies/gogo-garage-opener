@@ -14,6 +14,14 @@ type PinDao struct {
 	db *sql.DB
 }
 
+// Pin
+type Pin struct {
+	Pin       string    `json:"pin"  binding:"required"`
+	CreatedBy string    `json:"createdBy"  binding:"required"`
+	Created   time.Time `json:"created"  binding:"required"`
+	Used      time.Time `json:"used"  binding:"required"`
+}
+
 func (pinDao PinDao) newOneTimePin(email string) (string, error) {
 	pin := shortid.MustGenerate()
 	now := time.Now()
@@ -67,4 +75,29 @@ func (pinDao PinDao) getPinUsedDate(pin string) (int64, error) {
 	}
 	tx.Commit()
 	return usedDate, err
+}
+
+func (pinDao PinDao) getPins() ([]Pin, error) {
+	log.Debug("Getting pins")
+	tx, _ := pinDao.db.Begin()
+	prepStmt, err := pinDao.db.Prepare("select pin, created_by, created, used from one_time_pin")
+	defer prepStmt.Close()
+	rows, err := prepStmt.Query()
+	var pins []Pin
+	for rows.Next() {
+		var pin Pin
+		var created int64
+		var used int64
+		rows.Scan(&pin.Pin, &pin.CreatedBy, &created, &used)
+		pin.Created = time.Unix(created, 0)
+		pin.Used = time.Unix(used, 0)
+		log.WithField("pin", pin).Debug("Found pin")
+		pins = append(pins, pin)
+	}
+	if err != nil {
+		log.Error("Could not get pins")
+		tx.Rollback()
+	}
+	tx.Commit()
+	return pins, err
 }

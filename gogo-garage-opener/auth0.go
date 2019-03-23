@@ -44,7 +44,7 @@ func getEmail(accessToken string) string {
 	if err != nil {
 		panic(errors.New("Could not get email marshelled user info"))
 	}
-	email := string(json)
+	email := string(json)[1 : len(json)-1]
 	emailCache.Set(accessToken, email, cache.DefaultExpiration)
 	return email
 }
