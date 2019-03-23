@@ -27,9 +27,9 @@ func getAccessToken() string {
 	email := os.Getenv("EMAIL")
 	password := os.Getenv("PASSWORD")
 	clientID := os.Getenv("CLIENT_ID")
-	log.WithField("email", len(email)).WithField("password", len(password)).WithField("clientID", len(clientID)).Info("Making request to login")
-
 	clientSecret := os.Getenv("CLIENT_SECRET")
+	log.WithField("clientSecret", len(clientSecret)).WithField("email", len(email)).WithField("password", len(password)).WithField("clientID", len(clientID)).Info("Making request to login")
+
 	payloadString := "{\"grant_type\":\"http://auth0.com/oauth/grant-type/password-realm\",\"username\": \"" + email + "\",\"password\": \"" + password + "\",\"audience\": \"https://open.mygaragedoor.space/api\", \"scope\": \"openid email\", \"client_id\": \"" + clientID + "\", \"client_secret\": \"" + clientSecret + "\", \"realm\": \"Username-Password-Authentication\"}"
 	payload := strings.NewReader(payloadString)
 	log.WithField("payload", payload).Info("Making request to login")
