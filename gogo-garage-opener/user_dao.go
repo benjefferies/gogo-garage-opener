@@ -29,30 +29,6 @@ func (userDao UserDao) createUser(email string) {
 	}
 }
 
-func (userDao UserDao) getUserByEmail(email string) User {
-	log.WithField("email", email).Debug("getting user")
-
-	tx, _ := userDao.db.Begin()
-	rows, _ := userDao.db.Query("select lower(email) from user where lower(email) = lower(?)", email)
-	defer rows.Close()
-
-	user := getUserFromRows(rows)
-	tx.Commit()
-	return user
-}
-
-func (userDao UserDao) getUserByToken(token string) User {
-	log.WithField("token", token).Debug("getting user")
-
-	tx, _ := userDao.db.Begin()
-	rows, _ := userDao.db.Query("select lower(email) from user where token = ?", token)
-	defer rows.Close()
-
-	user := getUserFromRows(rows)
-	tx.Commit()
-	return user
-}
-
 func (userDao UserDao) getSubscribedUserEmails() []string {
 	tx, _ := userDao.db.Begin()
 	rows, _ := userDao.db.Query("select lower(email) from user where subscribed = 1")
@@ -66,41 +42,4 @@ func (userDao UserDao) getSubscribedUserEmails() []string {
 	}
 	tx.Commit()
 	return emails
-}
-
-func getUserFromRows(rows *sql.Rows) User {
-	for rows.Next() {
-		var userEmail string
-
-		rows.Scan(&userEmail)
-		user := User{Email: userEmail}
-		log.WithField("email", user.Email).Debug("Found user")
-		return user
-	}
-	return User{}
-}
-
-func (userDao UserDao) setToken(user User) {
-	log.WithField("token", user.Token).WithField("email", user.Email).Debug("Updating token")
-
-	tx, _ := userDao.db.Begin()
-	prepStmt, err := userDao.db.Prepare("update user set token = ? where email = ?;")
-	defer prepStmt.Close()
-	_, err = prepStmt.Exec(user.Token, user.Email)
-	if err != nil {
-		log.Error(err)
-		tx.Rollback()
-	} else {
-		tx.Commit()
-	}
-}
-
-func (userDao UserDao) tokenExists(token string) bool {
-	log.WithField("token", token).Debug("Checking valid token")
-
-	tx, _ := userDao.db.Begin()
-	rows, _ := userDao.db.Query("select 1 from user where token = ?", token)
-	defer rows.Close()
-	tx.Commit()
-	return rows.Next()
 }
