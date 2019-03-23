@@ -30,10 +30,9 @@ func NewRaspberryPiDoorController(relayPinID int, contactSwitchPinID int) Raspbe
 func (raspberryPiDoorController RaspberryPiDoorController) toggleDoor() {
 	// Toggle pin on/off
 	raspberryPiDoorController.relayPin.Toggle()
-	log.Info("Toggle relay switch on")
+	log.Debug("Toggle relay switch")
 	time.Sleep(time.Millisecond * 500)
 	raspberryPiDoorController.relayPin.Toggle()
-	log.Info("Toggle relay switch off")
 }
 
 // Get the state of the garage door

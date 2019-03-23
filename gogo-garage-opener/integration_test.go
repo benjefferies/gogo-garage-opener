@@ -21,16 +21,17 @@ import (
 
 var accessToken string
 
+// NOTE Requires password grant flow to be enabled
 func getAccessToken() string {
-
 	url := "https://gogo-garage-opener.eu.auth0.com/oauth/token"
 	email := os.Getenv("EMAIL")
 	password := os.Getenv("PASSWORD")
 	clientID := os.Getenv("CLIENT_ID")
 
 	clientSecret := os.Getenv("CLIENT_SECRET")
-	payload := strings.NewReader("{\"grant_type\":\"http://auth0.com/oauth/grant-type/password-realm\",\"username\": \"" + email + "\",\"password\": \"" + password + "\",\"audience\": \"https://open.mygaragedoor.space/api\", \"scope\": \"openid email\", \"client_id\": \"" + clientID + "\", \"client_secret\": \"" + clientSecret + "\", \"realm\": \"Username-Password-Authentication\"}")
-
+	payloadString := "{\"grant_type\":\"http://auth0.com/oauth/grant-type/password-realm\",\"username\": \"" + email + "\",\"password\": \"" + password + "\",\"audience\": \"https://open.mygaragedoor.space/api\", \"scope\": \"openid email\", \"client_id\": \"" + clientID + "\", \"client_secret\": \"" + clientSecret + "\", \"realm\": \"Username-Password-Authentication\"}"
+	payload := strings.NewReader(payloadString)
+	log.WithField("payload", payload).Info("Making request to login")
 	req, _ := http.NewRequest("POST", url, payload)
 
 	req.Header.Add("content-type", "application/json")
@@ -63,13 +64,13 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.WithError(err).Fatal("Application is not initialised")
 	}
-	m.Run()
+	exitCode := m.Run()
 	log.Info("Started server in integration test")
 	err = os.Remove("gogo-garage-opener.db")
 	if err != nil {
 		log.WithError(err).Fatal("Could not delete database file")
 	}
-	os.Exit(0)
+	os.Exit(exitCode)
 }
 
 func TestOneTimePinAccess(t *testing.T) {

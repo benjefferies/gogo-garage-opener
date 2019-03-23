@@ -129,6 +129,18 @@ func TestShouldNotCloseShouldCloseTimeWhenLeftOpenFor1Minutes(t *testing.T) {
 	assert.True(t, controller.getDoorState().isOpen(), "Should not be closed")
 }
 
+func TestShouldNotCloseShouldCloseTimeWhenLeftOpenFor3MinutesAndNotShouldCloseYet(t *testing.T) {
+	controller := &AutoCloseDoorController{open}
+	now := time.Now()
+	shouldClose := now.Add(time.Hour)
+	canStayOpen := now.Add(-time.Hour)
+	autoclose := Autoclose{openDuration: time.Minute * 3, doorController: controller, shouldCloseTime: shouldClose, canStayOpenTime: canStayOpen}
+
+	autoclose.autoClose()
+
+	assert.True(t, controller.getDoorState().isOpen(), "Should not be closed")
+}
+
 func TestShouldCloseAfterShouldCloseWhenLeftOpenFor3Minutes(t *testing.T) {
 	controller := &AutoCloseDoorController{open}
 	now := time.Now()

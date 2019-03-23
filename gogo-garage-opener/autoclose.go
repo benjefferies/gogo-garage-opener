@@ -27,6 +27,7 @@ func (autoclose Autoclose) shouldClose() bool {
 	openTooLong := autoclose.openDuration > time.Minute*2
 	shouldClose := now.After(autoclose.shouldCloseTime)
 	canStayOpen := now.Before(autoclose.canStayOpenTime)
+	log.WithField("openTooLong", openTooLong).WithField("shouldClose", shouldClose).WithField("canStayOpen", canStayOpen).Debug("Evaluating if garage should change state")
 	if shouldClose && openTooLong && !canStayOpen {
 		return true
 	}
@@ -41,13 +42,13 @@ func (autoclose *Autoclose) autoClose() bool {
 	}
 
 	shouldClose := autoclose.shouldClose()
-	log.WithField("shouldClose", shouldClose).WithField("state", state).Debug("Evaluating autoclose")
 	if shouldClose {
+		log.Debug("Autoclosing garage")
 		autoclose.doorController.toggleDoor()
 		autoclose.openDuration = time.Minute * 0
 		return true
 	}
 	autoclose.openDuration = autoclose.openDuration + time.Minute // Time increase needs to be in sync with sleep time
-	log.WithField("openDuration", autoclose.openDuration).Debug("Open duration increased")
+	log.WithField("openDuration", autoclose.openDuration).Debug("Garage left open increasing openDuration")
 	return false
 }
