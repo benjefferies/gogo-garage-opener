@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"net/http"
 
 	"github.com/gorilla/context"
@@ -10,22 +11,11 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// oneTimePinUse static html of one time pin page
-const oneTimePinUse = `
-<html>
-	</head>
-	<body>
-		<h1>One time pin garage door opener</h1>
-		<br>
-		<p>By clicking the button below it will open the garage door. The garage door will automatically close %v seconds after clicking the button</p>
-		<br>
-		<br>
-		<form name="myform" action="/garage/one-time-pin/%s" method="post">
-			<button>Open</button>
-		</form>
-	</body>
-</html>
-`
+// UserResource API for users
+type PinPage struct {
+	CloseTime float64
+	Pin       string
+}
 
 // UserResource API for users
 type UserResource struct {
@@ -67,7 +57,12 @@ func (userResource UserResource) oneTimePinPage(w http.ResponseWriter, r *http.R
 	log.WithField("one_time_pin", oneTimePin).Debug("Using one time pin")
 	w.WriteHeader(200)
 	w.Header().Set("Content-Type", "text/html")
-	fmt.Fprintf(w, oneTimePinUse, timeToClose.Seconds(), oneTimePin)
+	page := PinPage{
+		CloseTime: timeToClose.Seconds(),
+		Pin:       oneTimePin,
+	}
+	tmpl, _ := template.ParseFiles("index.html")
+	tmpl.Execute(w, page)
 }
 
 func (userResource UserResource) deleteOneTimePin(w http.ResponseWriter, r *http.Request) {

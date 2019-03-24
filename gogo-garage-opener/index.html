@@ -1,0 +1,69 @@
+<html>
+
+<head>
+  <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway">
+  <style>
+    body,
+    h1,
+    p {
+      font-family: "Raleway", sans-serif;
+    }
+
+    body {
+      background-color: #222;
+      min-height: 100%;
+      background-position: center;
+      background-size: cover;
+    }
+
+    body,
+    html {
+      height: 100%
+    }
+
+    input[type="submit"] {
+      border-radius: 2px;
+      background: #f2f2f2;
+      border: 1px solid #f2f2f2;
+      color: #757575;
+      cursor: default;
+      font-size: 14px;
+      font-weight: bold;
+      width: 100px;
+      padding: 0 16px;
+      height: 36px;
+    }
+
+    input[type="submit"]:hover {
+      box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+      background: #f8f8f8;
+      border: 1px solid #c6c6c6;
+      box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+      color: #222;
+    }
+
+    form {
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body class="w3-display-container w3-animate-opacity w3-text-white">
+  <div class="w3-display-topleft w3-padding-large w3-xlarge">
+    <img
+      src="https://github.com/benjefferies/gogo-garage-opener-react-native/raw/master/android/app/src/main/res/mipmap-mdpi/ic_launcher.png" />
+    Garage door opener
+  </div>
+  <div class="w3-display-middle">
+    <h1 align="center" class="w3-jumbo w3-animate-top">Open Garage</h1>
+    <hr class="w3-border-grey" style="margin:auto;width:40%">
+    <p class="w3-large w3-center">By clicking the button below it will open the garage door. The garage door will
+      automatically close {{.CloseTime}}
+      seconds after clicking the buttont</p>
+    <form name="myform" action="/garage/one-time-pin/{{.Pin}}" method="post">
+      <input type="submit" value="Open">
+    </form>
+  </div>
+</body>
+</html>
