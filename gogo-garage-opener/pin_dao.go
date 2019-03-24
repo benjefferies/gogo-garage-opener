@@ -60,6 +60,21 @@ func (pinDao PinDao) use(pin string) error {
 	return err
 }
 
+func (pinDao PinDao) delete(pin string) error {
+	log.WithField("one_time_pin", pin).Debug("Deleting one time pin")
+
+	tx, _ := pinDao.db.Begin()
+	prepStmt, err := pinDao.db.Prepare("delete from one_time_pin where pin = ?")
+	defer prepStmt.Close()
+	_, err = prepStmt.Exec(pin)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	err = tx.Commit()
+	return err
+}
+
 func (pinDao PinDao) getPinUsedDate(pin string) (int64, error) {
 	log.WithField("one_time_pin", pin).Debug("Getting used date for pin")
 

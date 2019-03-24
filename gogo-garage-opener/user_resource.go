@@ -38,7 +38,8 @@ func (userResource UserResource) register(router *mux.Router) {
 	subRouter.Path("/login").Methods("POST").Handler(jwtCheckHandleFunc(userResource.login))
 	subRouter.Path("/one-time-pin").Methods("POST").Handler(jwtCheckHandleFunc(userResource.oneTimePin))
 	subRouter.Path("/one-time-pin").Methods("GET").Handler(jwtCheckHandleFunc(userResource.getOneTimePins))
-	subRouter.Path("/one-time-pin/{oneTimePin}").Methods("GET").HandlerFunc(userResource.useOneTimePin)
+	subRouter.Path("/one-time-pin/{oneTimePin}").Methods("DELETE").Handler(jwtCheckHandleFunc(userResource.deleteOneTimePin))
+	subRouter.Path("/one-time-pin/{oneTimePin}").Methods("GET").HandlerFunc(userResource.oneTimePinPage)
 }
 
 func (userResource UserResource) oneTimePin(w http.ResponseWriter, r *http.Request) {
@@ -60,13 +61,25 @@ func (userResource UserResource) oneTimePin(w http.ResponseWriter, r *http.Reque
 	w.WriteHeader(http.StatusOK)
 }
 
-func (userResource UserResource) useOneTimePin(w http.ResponseWriter, r *http.Request) {
+func (userResource UserResource) oneTimePinPage(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	oneTimePin := vars["oneTimePin"]
 	log.WithField("one_time_pin", oneTimePin).Debug("Using one time pin")
 	w.WriteHeader(200)
 	w.Header().Set("Content-Type", "text/html")
 	fmt.Fprintf(w, oneTimePinUse, timeToClose.Seconds(), oneTimePin)
+}
+
+func (userResource UserResource) deleteOneTimePin(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	oneTimePin := vars["oneTimePin"]
+	log.WithField("one_time_pin", oneTimePin).Debug("Deleting one time pin")
+	err := userResource.pinDao.delete(oneTimePin)
+	w.Header().Set("Content-Type", "application/json")
+	if err != nil {
+		w.WriteHeader(500)
+	}
+	w.WriteHeader(200)
 }
 
 func (userResource UserResource) getOneTimePins(w http.ResponseWriter, r *http.Request) {

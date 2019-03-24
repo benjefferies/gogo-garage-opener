@@ -93,17 +93,21 @@ func TestOneTimePinAccess(t *testing.T) {
 func TestNewOneTimePin(t *testing.T) {
 	// Given
 	authHeader := fmt.Sprintf("Bearer %s", accessToken)
+	var pin map[string]string
 
 	// When
 	response, err := resty.R().
 		SetHeader("Authorization", authHeader).
 		SetHeader("Content-Type", "application/json").
+		SetResult(&pin).
 		Post("http://localhost:8080/user/one-time-pin")
 
 	// Then
 	assert.Nil(t, err, "Not expecting an error")
+	log.WithField("pin", pin).Info("Got new pin")
 	assert.Equal(t, 200, response.StatusCode(), "Expecting OK http status")
-	assert.Contains(t, string(response.Body()), getPin(t), "Response should contain pin")
+	assert.NotEmpty(t, pin["pin"], "Response should contain pin")
+	assert.True(t, pinExists(t, pin["pin"]), "Pin should exist")
 }
 
 func TestGetOneTimePins(t *testing.T) {
@@ -123,6 +127,23 @@ func TestGetOneTimePins(t *testing.T) {
 	assert.Equal(t, 200, response.StatusCode(), "Expecting OK http status")
 	assert.Equal(t, pins[0].Pin, getPin(t), "Response should contain pin")
 	assert.Equal(t, pins[0].CreatedBy, "test@echosoft.uk", "Response should who created the pin")
+}
+
+func TestDeleteOneTimePins(t *testing.T) {
+	// Given
+	pin := getNewPin(t)
+	authHeader := fmt.Sprintf("Bearer %s", accessToken)
+
+	// When
+	response, err := resty.R().
+		SetHeader("Authorization", authHeader).
+		SetHeader("Content-Type", "application/json").
+		Delete("http://localhost:8080/user/one-time-pin/" + pin)
+
+	// Then
+	assert.Nil(t, err, "Not expecting an error")
+	assert.Equal(t, 200, response.StatusCode(), "Expecting OK http status")
+	assert.False(t, pinExists(t, pin), "Response should who created the pin")
 }
 
 func TestUseOneTimePin(t *testing.T) {
@@ -204,6 +225,19 @@ func getPin(t *testing.T) string {
 	row.Scan(&pin)
 	log.WithField("pin", pin).Info("Found pin")
 	return pin
+}
+
+func pinExists(t *testing.T, pin string) bool {
+	db, err := sql.Open("sqlite3", *database)
+	assert.Nil(t, err, "Not expecting an error")
+	db.Begin()
+	row := db.QueryRow("select count(pin) from one_time_pin where pin = ?", pin)
+	assert.NotEqual(t, row, sql.ErrNoRows, "Shouldn't be error")
+	db.Close()
+	var count int64
+	row.Scan(&count)
+	log.WithField("pin", pin).WithField("count", count).Info("Count pin")
+	return count > 0
 }
 
 func getNewPin(t *testing.T) string {
