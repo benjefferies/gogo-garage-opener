@@ -55,14 +55,9 @@
     Garage door opener
   </div>
   <div class="w3-display-middle">
-    <h1 align="center" class="w3-jumbo w3-animate-top">Open Garage</h1>
+    <h1 align="center" class="w3-jumbo w3-animate-top">Garage Opened</h1>
     <hr class="w3-border-grey" style="margin:auto;width:40%">
-    <p class="w3-xlarge w3-center">By clicking the button below it will open the garage door. The garage door will
-      automatically close {{.CloseTime}}
-      seconds after clicking the buttont</p>
-    <form name="myform" action="/garage/one-time-pin/{{.Pin}}" method="post">
-      <input type="submit" value="Open">
-    </form>
+    <p class="w3-xlarge w3-center">Garage will close in {{.CloseTime}} seconds</p>
   </div>
 </body>
 </html>

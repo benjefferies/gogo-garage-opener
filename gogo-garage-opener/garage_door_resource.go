@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"net/http"
 	"strconv"
 	"time"
@@ -39,23 +40,31 @@ func (garageDoorResource GarageDoorResource) useOneTimePin(w http.ResponseWriter
 		log.Info("Pin has already been used")
 		w.WriteHeader(401)
 		fmt.Fprintf(w, "Pin has already been used")
-	} else if err != nil {
+		return
+	}
+	if err != nil {
 		log.WithError(err).WithField("one_time_pin", oneTimePin).Error("Could not get pin used date")
 		w.WriteHeader(500)
 		fmt.Fprintf(w, "Failed to open garage")
-	} else {
-		err = garageDoorResource.pinDao.use(oneTimePin)
-		if err != nil {
-			log.WithError(err).WithField("one_time_pin", oneTimePin).Error("Could not use pin")
-			w.WriteHeader(401)
-			fmt.Fprintf(w, "Pin has already been used")
-			return
-		}
-		garageDoorResource.doorController.toggleDoor()
-		w.WriteHeader(202)
-		fmt.Fprintf(w, "Opening garage, it will close in %v seconds", timeToClose.Seconds())
-		go garageDoorResource.closeGarage(oneTimePin)
+		return
 	}
+	err = garageDoorResource.pinDao.use(oneTimePin)
+	if err != nil {
+		log.WithError(err).WithField("one_time_pin", oneTimePin).Error("Could not use pin")
+		w.WriteHeader(401)
+		fmt.Fprintf(w, "Pin has already been used")
+		return
+	}
+	garageDoorResource.doorController.toggleDoor()
+	w.WriteHeader(202)
+	w.Header().Set("Content-Type", "text/html")
+	page := PinPage{
+		CloseTime: timeToClose.Seconds(),
+		Pin:       oneTimePin,
+	}
+	tmpl, _ := template.ParseFiles("used.html")
+	tmpl.Execute(w, page)
+	go garageDoorResource.closeGarage(oneTimePin)
 }
 
 func (garageDoorResource GarageDoorResource) closeGarage(pin string) {
