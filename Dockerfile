@@ -28,7 +28,9 @@ RUN go install -v ./...
 
 FROM arm32v7/debian:9-slim
 
+WORKDIR /var/gogo-garage-opener
+
 COPY --from=builder /go/bin/linux_arm/gogo-garage-opener /var/gogo-garage-opener/gogo-garage-opener
 COPY gogo-garage-opener/index.html /var/gogo-garage-opener/index.html
 
-CMD [ "/var/gogo-garage-opener/gogo-garage-opener" ]
+CMD [ "./gogo-garage-opener" ]
