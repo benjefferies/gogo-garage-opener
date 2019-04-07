@@ -40,12 +40,14 @@ func jwtCheckHandleFunc(httpFunc http.HandlerFunc) *negroni.Negroni {
 		ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
 			// Verify 'aud' claim
 			aud := fmt.Sprintf("https://%s/api", *rs)
+			log.WithField("aud", aud).Debug("Validating audience")
 			checkAud := token.Claims.(jwt.MapClaims).VerifyAudience(aud, false)
 			if !checkAud {
 				return token, errors.New("invalid audience")
 			}
 			// Verify 'iss' claim
 			iss := fmt.Sprintf("https://%s/", *as)
+			log.WithField("iss", iss).Debug("Validating issuer")
 			checkIss := token.Claims.(jwt.MapClaims).VerifyIssuer(iss, false)
 			if !checkIss {
 				return token, errors.New("invalid issuer")
@@ -65,7 +67,7 @@ func jwtCheckHandleFunc(httpFunc http.HandlerFunc) *negroni.Negroni {
 		negroni.HandlerFunc(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 			authHeaderParts := strings.Split(r.Header.Get("Authorization"), " ")
 			token := authHeaderParts[1]
-			log.Info("Checking scope")
+			log.Debug("Checking scope")
 			hasScope := checkScope("email", token)
 
 			if !hasScope {

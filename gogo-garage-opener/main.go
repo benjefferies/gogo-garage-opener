@@ -23,6 +23,8 @@ var (
 	autoclose        = flag.Bool("autoclose", true, "Should auto close between 10pm-8am")
 	rs               = flag.String("rs", "open.mygaragedoor.space", "Domain of the resource sever (raspberry pi)")
 	as               = flag.String("as", "gogo-garage-opener.eu.auth0.com", "Domain of the authorisation sever (auth0 api)")
+	webhookUsername  = flag.String("webhook_username", "", "Username for webhook basic auth")
+	webhookPassword  = flag.String("webhook_password", "", "Password for webhook basic auth")
 )
 
 func main() {
@@ -67,9 +69,11 @@ func autoCloseMonitoring(doorController DoorController, userDao UserDao) {
 func registerResources(userDao UserDao, pinDao PinDao, doorController DoorController) *mux.Router {
 	userResource := UserResource{userDao: userDao, pinDao: pinDao}
 	garageDoorResource := GarageDoorResource{userDao: userDao, pinDao: pinDao, doorController: doorController}
+	assistantResource := AssistantResource{doorController: doorController}
 	router := mux.NewRouter()
 	userResource.register(router)
 	garageDoorResource.register(router)
+	assistantResource.register(router)
 	return router
 }
 

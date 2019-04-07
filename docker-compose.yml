@@ -33,6 +33,8 @@ services:
       - RS=${RS}
       - AS=${AS}
       - AWS_SES_ENDPOINT=${AWS_SES_ENDPOINT}
+      - WEBHOOK_USERNAME=${WEBHOOK_USERNAME}
+      - WEBHOOK_PASSWORD=${WEBHOOK_PASSWORD}
     restart: always
     logging:
         driver: json-file
