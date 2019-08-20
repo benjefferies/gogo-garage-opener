@@ -87,7 +87,7 @@ func TestOneTimePinAccess(t *testing.T) {
 	// Then
 	assert.Nil(t, err)
 	assert.Equal(t, 200, response.StatusCode(), "Expecting OK http status")
-	assert.Contains(t, string(response.Body()), "action=\"/garage/one-time-pin/my-pin\"", "Should contain link to use pin")
+	assert.Contains(t, string(response.Body), "action=\"/garage/one-time-pin/my-pin\"", "Should contain link to use pin")
 }
 
 func TestNewOneTimePin(t *testing.T) {
@@ -122,7 +122,7 @@ func TestGetOneTimePins(t *testing.T) {
 
 	// Then
 	var pins []Pin
-	json.Unmarshal(response.Body(), &pins)
+	json.Unmarshal(response.Body, &pins)
 	assert.Nil(t, err, "Not expecting an error")
 	assert.Equal(t, 200, response.StatusCode(), "Expecting OK http status")
 	assert.Equal(t, pins[0].Pin, getPin(t), "Response should contain pin")
@@ -250,7 +250,7 @@ func getNewPin(t *testing.T) string {
 	t.Log(accessToken)
 	assert.Nil(t, err, "Not expecting an error")
 	var pin map[string]string
-	err = json.Unmarshal(response.Body(), &pin)
+	err = json.Unmarshal(response.Body, &pin)
 	assert.Nil(t, err, "Not expecting an error")
 	return pin["pin"]
 }

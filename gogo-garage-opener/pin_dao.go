@@ -14,7 +14,7 @@ type PinDao struct {
 	db *sql.DB
 }
 
-// Pin
+// Pin datamodel
 type Pin struct {
 	Pin       string    `json:"pin"  binding:"required"`
 	CreatedBy string    `json:"createdBy"  binding:"required"`

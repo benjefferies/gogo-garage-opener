@@ -1,9 +1,7 @@
 FROM golang as builder
 
 # Install ARM gcc and build tools
-RUN echo "deb http://emdebian.org/tools/debian/ jessie main" >> /etc/apt/sources.list && \
-    curl http://emdebian.org/tools/debian/emdebian-toolchain-archive.key | apt-key add - && \
-    dpkg --add-architecture armhf && \
+RUN dpkg --add-architecture armhf && \
     apt-get -y update && \
     apt-get -y install crossbuild-essential-armhf
 

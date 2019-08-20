@@ -11,7 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// UserResource API for users
+// PinPage model for enter pin page
 type PinPage struct {
 	CloseTime float64
 	Pin       string
