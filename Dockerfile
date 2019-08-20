@@ -1,8 +1,9 @@
 FROM golang:1.12 as builder
 
 # Install ARM gcc and build tools
-RUN dpkg --add-architecture armhf && \
+RUN echo "deb http://ftp.de.debian.org/debian sid main" >> /etc/apt/sources.list && \
     apt-get -y update && \
+    apt-get -y upgrade libc6 && \
     apt-get -y install crossbuild-essential-armhf
 
 # The command to use to compile C code.
