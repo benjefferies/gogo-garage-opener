@@ -50,6 +50,7 @@ func TestNewInstanceSetsClosingTimeAt10pm(t *testing.T) {
 func TestNewInstanceSetsCanStayOpenTimeAt8am(t *testing.T) {
 	controller := &AutoCloseDoorController{open}
 	now := time.Now()
+
 	canStayOpen := time.Date(now.Year(), now.Month(), now.Day(), 8, 0, 0, 0, time.Local)
 
 	autoclose := NewAutoclose(controller)
