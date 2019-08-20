@@ -1,4 +1,4 @@
-FROM golang as builder
+FROM golang:1.12 as builder
 
 # Install ARM gcc and build tools
 RUN dpkg --add-architecture armhf && \
