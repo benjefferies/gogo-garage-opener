@@ -2,6 +2,7 @@ language: go
 services:
 - docker
 go:
+- 1.12.9
 - tip
 matrix:
   fast_finish: true
