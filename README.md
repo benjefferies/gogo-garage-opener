@@ -32,7 +32,7 @@ Auto close the door if it's left open between 10PM and 8AM.
 * Clone the repository
 * [Docker](https://docs.docker.com/engine/installation/) installed
 * [Docker compose](https://withblue.ink/2019/07/13/yes-you-can-run-docker-on-raspbian.html)
-* [No-ip optional](https://github.com/jeroendoggen/scripts-tools-misc/tree/master/noip2)
+* [No-ip optional](https://askubuntu.com/a/1089789)
 
 ### To build
 Look to [Dockerfile](./Dockerfile) for the latest instructions for building
