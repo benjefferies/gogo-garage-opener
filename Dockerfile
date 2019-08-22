@@ -1,9 +1,7 @@
 FROM golang:1.12 as builder
 
 # Install ARM gcc and build tools
-RUN echo "deb http://ftp.de.debian.org/debian sid main" >> /etc/apt/sources.list && \
-    apt-get -y update && \
-    apt-get -y upgrade libc6 && \
+RUN apt-get -y update && \
     apt-get -y install crossbuild-essential-armhf
 
 # The command to use to compile C code.
@@ -26,6 +24,10 @@ RUN go get -d -v ./...
 RUN go install -v ./...
 
 FROM arm32v7/debian:9-slim
+
+RUN echo "deb http://ftp.de.debian.org/debian sid main" >> /etc/apt/sources.list \
+  && apt-get update \
+  && apt-get -y upgrade libc6
 
 WORKDIR /var/gogo-garage-opener
 
