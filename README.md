@@ -4,7 +4,7 @@ Go implementation of a Raspberry Pi garage door opener
 
 ## Features
 
-### Open garage door using a mobile app
+### Open garage door using an app
 
 [Garage Opener on Play Store](https://play.google.com/store/apps/details?id=uk.echosoft.garage.opener) ([source](https://github.com/benjefferies/gogo-garage-opener-react-native))
 
@@ -31,6 +31,7 @@ Auto close the door if it's left open between 10PM and 8AM.
 * Small [solderless breadboard](https://www.amazon.co.uk/gp/product/B0040Z4QGA/ref=oh_aui_detailpage_o09_s00?ie=UTF8&psc=1)
 * Clone the repository
 * [Docker](https://docs.docker.com/engine/installation/) installed
+* [Docker compose](https://withblue.ink/2019/07/13/yes-you-can-run-docker-on-raspbian.html)
 
 ### To build
 Look to [Dockerfile](./Dockerfile) for the latest instructions for building
