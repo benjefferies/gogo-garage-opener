@@ -1,5 +1,5 @@
 FROM golang:1.12 as builder
-
+WORKDIR /go/src/github.com/benjefferies/gogo-garage-opener
 RUN curl -L https://github.com/balena-io/qemu/releases/download/v3.0.0%2Bresin/qemu-3.0.0+resin-arm.tar.gz | tar zxvf - -C . && mv qemu-3.0.0+resin-arm/qemu-arm-static .
 
 FROM arm32v7/debian:9-slim
