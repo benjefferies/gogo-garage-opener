@@ -1,4 +1,4 @@
-FROM golang:1.12 as builder
+FROM golang:1.12-stretch as builder
 
 # Install ARM gcc and build tools
 RUN apt-get -y update && \
@@ -24,10 +24,6 @@ RUN go get -d -v ./...
 RUN go install -v ./...
 
 FROM arm32v7/debian:9-slim
-
-RUN bash -c "echo deb http://ftp.de.debian.org/debian sid main" >> /etc/apt/sources.list
-RUN apt-get update
-RUN apt-get -y upgrade libc6
 
 WORKDIR /var/gogo-garage-opener
 
