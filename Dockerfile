@@ -25,7 +25,7 @@ RUN go install -v ./...
 
 FROM arm32v7/debian:9-slim
 
-RUN sh -c "echo deb http://ftp.de.debian.org/debian sid main" >> /etc/apt/sources.list
+RUN bash -c "echo deb http://ftp.de.debian.org/debian sid main" >> /etc/apt/sources.list
 RUN apt-get update
 RUN apt-get -y upgrade libc6
 
