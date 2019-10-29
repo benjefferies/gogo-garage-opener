@@ -63,7 +63,7 @@ func TestShouldAutoCloseAfterShouldCloseTime(t *testing.T) {
 	now := time.Now()
 	shouldClose := now.Add(-time.Minute)
 	canStayOpen := now.Add(-time.Hour)
-	autoclose := Autoclose{openDuration: time.Minute * 3, doorController: controller, shouldCloseTime: shouldClose, canStayOpenTime: canStayOpen}
+	autoclose := Autoclose{openDuration: time.Minute * 2, doorController: controller, shouldCloseTime: shouldClose, canStayOpenTime: canStayOpen}
 
 	autoclose.autoClose()
 
@@ -75,7 +75,7 @@ func TestShouldAutoCloseWhenShouldCloseTimeAfterCanStayOpenTime(t *testing.T) {
 	now := time.Now()
 	shouldClose := now.Add(-time.Minute)
 	canStayOpen := now.Add(-time.Minute * 2)
-	autoclose := Autoclose{openDuration: time.Minute * 3, doorController: controller, shouldCloseTime: shouldClose, canStayOpenTime: canStayOpen}
+	autoclose := Autoclose{openDuration: time.Minute * 2, doorController: controller, shouldCloseTime: shouldClose, canStayOpenTime: canStayOpen}
 
 	autoclose.autoClose()
 
@@ -87,7 +87,7 @@ func TestShouldNotAutoCloseBeforeShouldCloseTime(t *testing.T) {
 	now := time.Now()
 	shouldClose := now.Add(time.Minute)
 	canStayOpen := now.Add(-time.Hour)
-	autoclose := Autoclose{openDuration: time.Minute * 3, doorController: controller, shouldCloseTime: shouldClose, canStayOpenTime: canStayOpen}
+	autoclose := Autoclose{openDuration: time.Minute * 2, doorController: controller, shouldCloseTime: shouldClose, canStayOpenTime: canStayOpen}
 
 	autoclose.autoClose()
 
@@ -99,7 +99,7 @@ func TestShouldAutoCloseBeforeCanStayOpenTime(t *testing.T) {
 	now := time.Now()
 	shouldClose := now.Add(-time.Minute)
 	canStayOpen := now.Add(-time.Hour)
-	autoclose := Autoclose{openDuration: time.Minute * 3, doorController: controller, shouldCloseTime: shouldClose, canStayOpenTime: canStayOpen}
+	autoclose := Autoclose{openDuration: time.Minute * 2, doorController: controller, shouldCloseTime: shouldClose, canStayOpenTime: canStayOpen}
 
 	autoclose.autoClose()
 
@@ -111,7 +111,7 @@ func TestShouldNotOpenAfterShouldCloseTime(t *testing.T) {
 	now := time.Now()
 	shouldClose := now.Add(-time.Minute)
 	canStayOpen := now.Add(-time.Hour)
-	autoclose := Autoclose{openDuration: time.Minute * 3, doorController: controller, shouldCloseTime: shouldClose, canStayOpenTime: canStayOpen}
+	autoclose := Autoclose{openDuration: time.Minute * 2, doorController: controller, shouldCloseTime: shouldClose, canStayOpenTime: canStayOpen}
 
 	autoclose.autoClose()
 
@@ -135,7 +135,7 @@ func TestShouldNotCloseShouldCloseTimeWhenLeftOpenFor3MinutesAndNotShouldCloseYe
 	now := time.Now()
 	shouldClose := now.Add(time.Hour)
 	canStayOpen := now.Add(-time.Hour)
-	autoclose := Autoclose{openDuration: time.Minute * 3, doorController: controller, shouldCloseTime: shouldClose, canStayOpenTime: canStayOpen}
+	autoclose := Autoclose{openDuration: time.Minute * 2, doorController: controller, shouldCloseTime: shouldClose, canStayOpenTime: canStayOpen}
 
 	autoclose.autoClose()
 
@@ -147,7 +147,7 @@ func TestShouldCloseAfterShouldCloseWhenLeftOpenFor3Minutes(t *testing.T) {
 	now := time.Now()
 	shouldClose := now.Add(-time.Minute)
 	canStayOpen := now.Add(-time.Hour)
-	autoclose := Autoclose{openDuration: time.Minute * 3, doorController: controller, shouldCloseTime: shouldClose, canStayOpenTime: canStayOpen}
+	autoclose := Autoclose{openDuration: time.Minute * 2, doorController: controller, shouldCloseTime: shouldClose, canStayOpenTime: canStayOpen}
 
 	autoclose.autoClose()
 
@@ -159,7 +159,7 @@ func TestShouldReturnTrueWhenClose(t *testing.T) {
 	now := time.Now()
 	shouldClose := now.Add(-time.Minute)
 	canStayOpen := now.Add(-time.Hour)
-	autoclose := Autoclose{openDuration: time.Minute * 3, doorController: controller, shouldCloseTime: shouldClose, canStayOpenTime: canStayOpen}
+	autoclose := Autoclose{openDuration: time.Minute * 2, doorController: controller, shouldCloseTime: shouldClose, canStayOpenTime: canStayOpen}
 
 	closing := autoclose.autoClose()
 
@@ -195,7 +195,7 @@ func TestResetOpenDurationWhenClosed(t *testing.T) {
 	now := time.Now()
 	shouldClose := now.Add(-time.Minute)
 	canStayOpen := now.Add(-time.Hour)
-	autoclose := Autoclose{openDuration: time.Minute * 3, doorController: controller, shouldCloseTime: shouldClose, canStayOpenTime: canStayOpen}
+	autoclose := Autoclose{openDuration: time.Minute * 2, doorController: controller, shouldCloseTime: shouldClose, canStayOpenTime: canStayOpen}
 
 	autoclose.autoClose()
 
@@ -207,7 +207,7 @@ func TestResetOpenDurationWhenClosing(t *testing.T) {
 	now := time.Now()
 	shouldClose := now.Add(-time.Minute)
 	canStayOpen := now.Add(-time.Hour)
-	autoclose := Autoclose{openDuration: time.Minute * 3, doorController: controller, shouldCloseTime: shouldClose, canStayOpenTime: canStayOpen}
+	autoclose := Autoclose{openDuration: time.Minute * 2, doorController: controller, shouldCloseTime: shouldClose, canStayOpenTime: canStayOpen}
 
 	autoclose.autoClose()
 
