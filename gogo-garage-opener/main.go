@@ -57,8 +57,8 @@ func main() {
 }
 
 func autoCloseMonitoring(doorController DoorController, userDao UserDao) {
-	autoclose := NewAutoclose(doorController)
 	for true {
+		autoclose := NewAutoclose(doorController)
 		if autoclose.autoClose() {
 			sendMail(userDao, "Autoclose: Garage door left open", fmt.Sprintf("Garage door appears to be left open at %s", time.Now().Format("3:04 PM")))
 		}

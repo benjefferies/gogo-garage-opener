@@ -10,6 +10,7 @@ require (
 	github.com/golang/protobuf v1.3.2
 	github.com/gorilla/context v1.1.1
 	github.com/gorilla/mux v1.7.3
+	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/mattn/go-sqlite3 v1.11.0
 	github.com/namsral/flag v1.7.4-pre
 	github.com/patrickmn/go-cache v2.1.0+incompatible
@@ -18,6 +19,10 @@ require (
 	github.com/stianeikeland/go-rpio v4.2.0+incompatible
 	github.com/stretchr/testify v1.4.0
 	github.com/ventu-io/go-shortid v0.0.0-20171029131806-771a37caa5cf
-	google.golang.org/genproto v0.0.0-20190819201941-24fa4b261c55
+	golang.org/x/net v0.0.0-20191028085509-fe3aa8a45271 // indirect
+	golang.org/x/sys v0.0.0-20191029155521-f43be2a4598c // indirect
+	golang.org/x/text v0.3.2 // indirect
+	google.golang.org/genproto v0.0.0-20191028173616-919d9bdd9fe6
+	google.golang.org/grpc v1.24.0 // indirect
 	gopkg.in/resty.v0 v0.4.1
 )
