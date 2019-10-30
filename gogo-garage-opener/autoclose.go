@@ -16,13 +16,18 @@ type Autoclose struct {
 
 // NewAutoclose AutoClose with default openDuration set to zero and closing time between 10pm-8am
 func NewAutoclose(doorcontroller DoorController) Autoclose {
+	return Autoclose{openDuration: time.Minute * 0, doorController: doorcontroller}.resetShouldCloseAndStayOpenTimes()
+}
+
+func (autoclose Autoclose) resetShouldCloseAndStayOpenTimes() Autoclose {
 	now := time.Now()
-	shouldClose := time.Date(now.Year(), now.Month(), now.Day(), 22, 0, 0, 0, time.Local)
-	canStayOpen := time.Date(now.Year(), now.Month(), now.Day(), 8, 0, 0, 0, time.Local)
-	return Autoclose{openDuration: time.Minute * 0, doorController: doorcontroller, shouldCloseTime: shouldClose, canStayOpenTime: canStayOpen}
+	autoclose.shouldCloseTime = time.Date(now.Year(), now.Month(), now.Day(), 22, 0, 0, 0, time.Local)
+	autoclose.canStayOpenTime = time.Date(now.Year(), now.Month(), now.Day(), 8, 0, 0, 0, time.Local)
+	return autoclose
 }
 
 func (autoclose Autoclose) shouldClose() bool {
+	autoclose.resetShouldCloseAndStayOpenTimes()
 	now := time.Now()
 	openTooLong := autoclose.openDuration >= time.Minute*2
 	canStayOpen := now.After(autoclose.canStayOpenTime) && now.Before(autoclose.shouldCloseTime)

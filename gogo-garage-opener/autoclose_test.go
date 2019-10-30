@@ -213,3 +213,16 @@ func TestResetOpenDurationWhenClosing(t *testing.T) {
 
 	assert.Equal(t, time.Minute*0, autoclose.openDuration, "Should reset open duration from 1 to 0 minutes")
 }
+
+
+func TestShouldResetTimesToRolloverDay(t *testing.T) {
+	controller := &AutoCloseDoorController{open}
+	now := time.Now()
+	shouldClose := now.Add(-time.Hour * 24).Add(time.Minute)
+	canStayOpen := now.Add(-time.Hour * 25)
+	autoclose := Autoclose{openDuration: time.Minute * 2, doorController: controller, shouldCloseTime: shouldClose, canStayOpenTime: canStayOpen}
+
+	should := autoclose.shouldClose()
+
+	assert.Equal(t, true, should, "Should not close after resetting times")
+}
