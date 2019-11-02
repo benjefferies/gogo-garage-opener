@@ -40,12 +40,6 @@ func main() {
 	doorController := getDoorController(noop)
 	router := registerResources(userDao, pinDao, doorController)
 
-	shouldNotify := *notification != time.Second*0
-	if shouldNotify {
-		log.Info("Monitoring garage door to send alerts")
-		go leftOpenAlertMonitoring(doorController, userDao)
-	}
-
 	if *autoclose {
 		log.Info("Monitoring garage door to autoclose")
 		go autoCloseMonitoring(doorController, userDao)
@@ -58,9 +52,14 @@ func main() {
 
 func autoCloseMonitoring(doorController DoorController, userDao UserDao) {
 	autoclose := NewAutoclose(doorController)
+	shouldNotify := *notification != time.Second*0
 	for true {
 		if autoclose.autoClose() {
-			sendMail(userDao, "Autoclose: Garage door left open", fmt.Sprintf("Garage door appears to be left open at %s", time.Now().Format("3:04 PM")))
+			log.Info("Sending emails for close notification")
+			sendMail(userDao, "Autoclose: Garage door left open", fmt.Sprintf("Garage door has been left open for %sm", autoclose.openDuration))
+		} else if shouldNotify && autoclose.openDuration > *notification {
+			log.Info("Sending emails for open notification")
+			sendMail(userDao, "Notification: Garage door left open", fmt.Sprintf("Garage door has been left open for %sm", autoclose.openDuration))
 		}
 		time.Sleep(time.Minute)
 	}
@@ -75,28 +74,6 @@ func registerResources(userDao UserDao, pinDao PinDao, doorController DoorContro
 	garageDoorResource.register(router)
 	assistantResource.register(router)
 	return router
-}
-
-func leftOpenAlertMonitoring(doorController DoorController, userDao UserDao) {
-	nilTime := time.Time{}
-	lastOpened := nilTime
-	for true {
-		if doorController.getDoorState().isOpen() {
-			if lastOpened == nilTime {
-				log.Info("Setting lastOpened")
-				lastOpened = time.Now()
-			}
-			now := time.Now()
-			openTooLong := lastOpened.Add(*notification)
-			if now.After(openTooLong) {
-				log.Info("Sending emails for open notification")
-				sendMail(userDao, "Notification: Garage door left open", fmt.Sprintf("Garage door has been left open since %s", lastOpened.Format("3:04 PM")))
-			}
-		} else {
-			lastOpened = nilTime
-		}
-		time.Sleep(*notification)
-	}
 }
 
 func sendMail(userDao UserDao, title string, body string) {
