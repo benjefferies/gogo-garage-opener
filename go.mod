@@ -11,7 +11,7 @@ require (
 	github.com/gorilla/context v1.1.1
 	github.com/gorilla/mux v1.7.3
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
-	github.com/mattn/go-sqlite3 v1.11.0
+	github.com/mattn/go-sqlite3 v1.12.0
 	github.com/namsral/flag v1.7.4-pre
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/sirupsen/logrus v1.4.2
