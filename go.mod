@@ -7,6 +7,7 @@ require (
 	github.com/auth0/go-jwt-middleware v0.0.0-20190805220309-36081240882b
 	github.com/codegangsta/negroni v1.0.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/go-resty/resty/v2 v2.1.0
 	github.com/golang/protobuf v1.3.2
 	github.com/gorilla/context v1.1.1
 	github.com/gorilla/mux v1.7.3
@@ -24,5 +25,4 @@ require (
 	golang.org/x/text v0.3.2 // indirect
 	google.golang.org/genproto v0.0.0-20191028173616-919d9bdd9fe6
 	google.golang.org/grpc v1.24.0 // indirect
-	gopkg.in/resty.v0 v0.4.1
 )

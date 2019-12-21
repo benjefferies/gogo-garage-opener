@@ -14,12 +14,14 @@ import (
 
 	"github.com/Rican7/retry"
 	"github.com/Rican7/retry/strategy"
+	resty "github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	resty "gopkg.in/resty.v0"
 )
 
 var accessToken string
+
+var client *resty.Client = resty.New()
 
 // NOTE Requires password grant flow to be enabled
 func getAccessToken() string {
@@ -60,7 +62,7 @@ func TestMain(m *testing.M) {
 	go main()
 	authHeader := fmt.Sprintf("Bearer %s", accessToken)
 	err := retry.Retry(func(attempt uint) error {
-		_, err := resty.R().SetHeader("Authorization", authHeader).Get("http://localhost:8080/user/one-time-pin/my-pin")
+		_, err := client.R().SetHeader("Authorization", authHeader).Get("http://localhost:8080/user/one-time-pin/my-pin")
 		return err
 	}, strategy.Limit(5), strategy.Delay(time.Second))
 	if err != nil {
@@ -80,14 +82,14 @@ func TestOneTimePinAccess(t *testing.T) {
 	authHeader := fmt.Sprintf("Bearer %s", accessToken)
 
 	// When
-	response, err := resty.R().
+	response, err := client.R().
 		SetHeader("Authorization", authHeader).
 		Get("http://localhost:8080/user/one-time-pin/my-pin")
 
 	// Then
 	assert.Nil(t, err)
 	assert.Equal(t, 200, response.StatusCode(), "Expecting OK http status")
-	assert.Contains(t, string(response.Body), "action=\"/garage/one-time-pin/my-pin\"", "Should contain link to use pin")
+	assert.Contains(t, string(response.Body()), "action=\"/garage/one-time-pin/my-pin\"", "Should contain link to use pin")
 }
 
 func TestNewOneTimePin(t *testing.T) {
@@ -96,7 +98,7 @@ func TestNewOneTimePin(t *testing.T) {
 	var pin map[string]string
 
 	// When
-	response, err := resty.R().
+	response, err := client.R().
 		SetHeader("Authorization", authHeader).
 		SetHeader("Content-Type", "application/json").
 		SetResult(&pin).
@@ -115,14 +117,14 @@ func TestGetOneTimePins(t *testing.T) {
 	authHeader := fmt.Sprintf("Bearer %s", accessToken)
 
 	// When
-	response, err := resty.R().
+	response, err := client.R().
 		SetHeader("Authorization", authHeader).
 		SetHeader("Content-Type", "application/json").
 		Get("http://localhost:8080/user/one-time-pin")
 
 	// Then
 	var pins []Pin
-	json.Unmarshal(response.Body, &pins)
+	json.Unmarshal(response.Body(), &pins)
 	assert.Nil(t, err, "Not expecting an error")
 	assert.Equal(t, 200, response.StatusCode(), "Expecting OK http status")
 	assert.Equal(t, pins[0].Pin, getPin(t), "Response should contain pin")
@@ -135,7 +137,7 @@ func TestDeleteOneTimePins(t *testing.T) {
 	authHeader := fmt.Sprintf("Bearer %s", accessToken)
 
 	// When
-	response, err := resty.R().
+	response, err := client.R().
 		SetHeader("Authorization", authHeader).
 		SetHeader("Content-Type", "application/json").
 		Delete("http://localhost:8080/user/one-time-pin/" + pin)
@@ -151,7 +153,7 @@ func TestUseOneTimePin(t *testing.T) {
 	pin := getNewPin(t)
 
 	// When
-	response, err := resty.R().
+	response, err := client.R().
 		SetHeader("Content-Type", "application/x-www-form-urlencoded").
 		SetHeader("Accept", "application/json").
 		Post("http://localhost:8080/garage/one-time-pin/" + pin)
@@ -164,13 +166,13 @@ func TestUseOneTimePin(t *testing.T) {
 func TestCannotUseOneTimePinTwice(t *testing.T) {
 	// Given
 	pin := getNewPin(t)
-	response, err := resty.R().
+	response, err := client.R().
 		SetHeader("Content-Type", "application/x-www-form-urlencoded").
 		SetHeader("Accept", "application/json").
 		Post("http://localhost:8080/garage/one-time-pin/" + pin)
 
 	// When
-	response, err = resty.R().
+	response, err = client.R().
 		SetHeader("Content-Type", "application/x-www-form-urlencoded").
 		SetHeader("Accept", "application/json").
 		Post("http://localhost:8080/garage/one-time-pin/" + pin)
@@ -185,7 +187,7 @@ func TestToggleGarage(t *testing.T) {
 	authHeader := fmt.Sprintf("Bearer %s", accessToken)
 
 	// When
-	response, err := resty.R().
+	response, err := client.R().
 		SetHeader("Content-Type", "application/json").
 		SetHeader("Authorization", authHeader).
 		Post("http://localhost:8080/garage/toggle")
@@ -200,7 +202,7 @@ func TestGarageStatus(t *testing.T) {
 	authHeader := fmt.Sprintf("Bearer %s", accessToken)
 
 	// When
-	response, err := resty.R().
+	response, err := client.R().
 		SetHeader("Content-Type", "application/json").
 		SetHeader("Authorization", authHeader).
 		SetResult(map[string]interface{}{}).
@@ -212,6 +214,74 @@ func TestGarageStatus(t *testing.T) {
 	result := (*response.Result().(*map[string]interface{}))
 	assert.Equal(t, fmt.Sprintf("%v", closed), fmt.Sprintf("%.f", result["State"]), "Expecting closed status")
 	assert.Equal(t, "Closed", result["Description"], "Expecting closed description")
+}
+
+func TestDefaultGarageConfiguration(t *testing.T) {
+	// Given
+	authHeader := fmt.Sprintf("Bearer %s", accessToken)
+
+	// When
+	response, err := client.R().
+		SetHeader("Authorization", authHeader).
+		Get("http://localhost:8080/garage/config")
+
+	// Then
+	assert.Equal(t, 200, response.StatusCode(), "Expecting OK http status")
+	assert.Nil(t, err, "Not expecting an error")
+	var config []GarageConfiguration
+	err = json.Unmarshal(response.Body(), &config)
+	assert.Nil(t, err, "Not expecting an error")
+	assert.Equal(t, 7, len(config), "Expecting configuration for all days of week")
+	dayConfig := getConfigByDay("Sunday", config)
+	assert.Equal(t, "Sunday", *dayConfig.Day, "Expecting day to be Sunday")
+	assert.Equal(t, int64(180), *dayConfig.OpenDuration, "Expecting open duration to be 3")
+	now := time.Now()
+	shouldCloseTime := time.Date(now.Year(), now.Month(), now.Day(), 22, 0, 0, 0, time.UTC)
+	assert.Equal(t, shouldCloseTime, *dayConfig.ShouldCloseTime, "Expecting ShouldCloseTime to be 10pm")
+	canStayOpenTime := time.Date(now.Year(), now.Month(), now.Day(), 8, 0, 0, 0, time.UTC)
+	assert.Equal(t, canStayOpenTime, *dayConfig.CanStayOpenTime, "Expecting CanStayOpenTime to be 8am")
+	assert.Equal(t, true, *dayConfig.Enabled, "Expecting enabled to be true")
+}
+
+func TestUpdateGarageConfiguration(t *testing.T) {
+	// Given
+	authHeader := fmt.Sprintf("Bearer %s", accessToken)
+	now := time.Now()
+	var day = "Sunday"
+	var duration = int64(4)
+	var enabled = false
+	newConfig := [1]GarageConfiguration{GarageConfiguration{Day: &day, OpenDuration: &duration, ShouldCloseTime: &now, CanStayOpenTime: &now, Enabled: &enabled}}
+	b, err := json.Marshal(newConfig)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(string(b))
+	response, err := client.R().
+		SetHeader("Authorization", authHeader).
+		SetHeader("Content-Type", "application/json").
+		SetBody(string(b)).
+		Put("http://localhost:8080/garage/config")
+	assert.Nil(t, err, "Not expecting an error")
+
+	// When
+	response, err = client.R().
+		SetHeader("Authorization", authHeader).
+		Get("http://localhost:8080/garage/config")
+
+	// Then
+	assert.Equal(t, 200, response.StatusCode(), "Expecting OK http status")
+	assert.Nil(t, err, "Not expecting an error")
+	var config []GarageConfiguration
+	err = json.Unmarshal(response.Body(), &config)
+	assert.Nil(t, err, "Not expecting an error")
+	assert.Equal(t, 7, len(config), "Expecting configuration for all days of week")
+	dayConfig := getConfigByDay("Sunday", config)
+	assert.Equal(t, day, *dayConfig.Day, "Expecting day to be Sunday")
+	assert.Equal(t, duration, *dayConfig.OpenDuration, "Expecting open duration to be 4")
+	assert.Equal(t, now.Format(time.RFC3339), dayConfig.ShouldCloseTime.Format(time.RFC3339), "Expecting ShouldCloseTime to be now")
+	assert.Equal(t, now.Format(time.RFC3339), dayConfig.CanStayOpenTime.Format(time.RFC3339), "Expecting CanStayOpenTime to be now")
+	assert.Equal(t, enabled, *dayConfig.Enabled, "Expecting enabled to be false")
 }
 
 func getPin(t *testing.T) string {
@@ -242,15 +312,14 @@ func pinExists(t *testing.T, pin string) bool {
 
 func getNewPin(t *testing.T) string {
 	authHeader := fmt.Sprintf("Bearer %s", accessToken)
-	response, err := resty.R().
+	response, err := client.R().
 		SetHeader("Content-Type", "application/json").
 		SetHeader("Authorization", authHeader).
 		Post("http://localhost:8080/user/one-time-pin")
 
-	t.Log(accessToken)
 	assert.Nil(t, err, "Not expecting an error")
 	var pin map[string]string
-	err = json.Unmarshal(response.Body, &pin)
+	err = json.Unmarshal(response.Body(), &pin)
 	assert.Nil(t, err, "Not expecting an error")
 	return pin["pin"]
 }

@@ -8,34 +8,53 @@ import (
 
 // Autoclose is to auto close the garage door
 type Autoclose struct {
-	openDuration    time.Duration
-	shouldCloseTime time.Time
-	canStayOpenTime time.Time
-	doorController  DoorController
+	openDuration   time.Duration
+	config         GarageConfiguration
+	doorController DoorController
+	garageDoorDao  GarageDoorDao
 }
 
 // NewAutoclose AutoClose with default openDuration set to zero and closing time between 10pm-8am
-func NewAutoclose(doorcontroller DoorController) Autoclose {
-	return Autoclose{openDuration: time.Minute * 0, doorController: doorcontroller}.resetShouldCloseAndStayOpenTimes()
+func NewAutoclose(doorcontroller DoorController, garageDoorDao GarageDoorDao) Autoclose {
+	return Autoclose{openDuration: time.Second * 0, doorController: doorcontroller, garageDoorDao: garageDoorDao}.resetShouldCloseAndStayOpenTimes()
 }
 
 func (autoclose Autoclose) resetShouldCloseAndStayOpenTimes() Autoclose {
 	now := time.Now()
-	autoclose.shouldCloseTime = time.Date(now.Year(), now.Month(), now.Day(), 22, 0, 0, 0, time.Local)
-	autoclose.canStayOpenTime = time.Date(now.Year(), now.Month(), now.Day(), 8, 0, 0, 0, time.Local)
+	config, err := autoclose.garageDoorDao.getConfiguration()
+	if err != nil {
+		shouldCloseTime := time.Date(now.Year(), now.Month(), now.Day(), 22, 0, 0, 0, time.Local)
+		canStayOpenTime := time.Date(now.Year(), now.Month(), now.Day(), 8, 0, 0, 0, time.Local)
+		enabled := true
+		canStayOpenDuration := int64(120)
+		day := now.Weekday().String()
+		autoclose.config = GarageConfiguration{Day: &day, ShouldCloseTime: &shouldCloseTime, CanStayOpenTime: &canStayOpenTime, Enabled: &enabled, OpenDuration: &canStayOpenDuration}
+		log.WithField("config", autoclose.config).Error("Could not get garage configuration using default")
+	} else {
+		autoclose.config = getConfigByDay(now.Weekday().String(), config)
+	}
 	return autoclose
+}
+
+func getConfigByDay(day string, config []GarageConfiguration) GarageConfiguration {
+	for _, dc := range config {
+		if *dc.Day == day {
+			return dc
+		}
+	}
+	return GarageConfiguration{}
 }
 
 func (autoclose Autoclose) shouldClose() bool {
 	autoclose.resetShouldCloseAndStayOpenTimes()
 	now := time.Now()
-	openTooLong := autoclose.openDuration >= time.Minute*2
-	canStayOpen := now.After(autoclose.canStayOpenTime) && now.Before(autoclose.shouldCloseTime)
+	openTooLong := autoclose.openDuration >= time.Second*time.Duration(autoclose.openDuration)
+	canStayOpen := now.After(*autoclose.config.CanStayOpenTime) && now.Before(*autoclose.config.ShouldCloseTime)
 	log.WithField("openTooLong", openTooLong).
 		WithField("canStayOpen", canStayOpen).
 		WithField("openDuration", autoclose.openDuration).
-		WithField("shouldCloseTime", autoclose.shouldCloseTime.Format("3:04:05 PM")).
-		WithField("canStayOpenTime", autoclose.canStayOpenTime.Format("3:04:05 PM")).
+		WithField("shouldCloseTime", autoclose.config.ShouldCloseTime.Format("3:04:05 PM")).
+		WithField("canStayOpenTime", autoclose.config.CanStayOpenTime.Format("3:04:05 PM")).
 		WithField("now", now.Format("3:04:05 PM")).
 		Debug("Evaluating if garage should change state")
 	if !canStayOpen && openTooLong {
@@ -49,7 +68,7 @@ func (autoclose Autoclose) shouldClose() bool {
 func (autoclose *Autoclose) autoClose() bool {
 	state := autoclose.doorController.getDoorState()
 	if state.isClosed() {
-		autoclose.openDuration = time.Minute * 0
+		autoclose.openDuration = time.Second * 0
 		return false
 	}
 
@@ -57,7 +76,7 @@ func (autoclose *Autoclose) autoClose() bool {
 	if shouldClose {
 		log.Debug("Autoclosing garage")
 		autoclose.doorController.toggleDoor()
-		autoclose.openDuration = time.Minute * 0
+		autoclose.openDuration = time.Second * 0
 		return true
 	}
 	autoclose.openDuration = autoclose.openDuration + time.Minute // Time increase needs to be in sync with sleep time

@@ -35,14 +35,16 @@ func main() {
 	db := initialise(*database)
 	userDao := UserDao{db}
 	pinDao := PinDao{db}
+	garageDoorDao := SqliteGarageDoorDao{db}
+	garageDoorDao.init()
 	noop := *relayPin == 0 && *contactSwitchPin == 0
 	log.WithField("NOOP", noop).Info("Running in mode")
 	doorController := getDoorController(noop)
-	router := registerResources(userDao, pinDao, doorController)
+	router := registerResources(userDao, pinDao, garageDoorDao, doorController)
 
 	if *autoclose {
 		log.Info("Monitoring garage door to autoclose")
-		go autoCloseMonitoring(doorController, userDao)
+		go autoCloseMonitoring(doorController, userDao, garageDoorDao)
 	}
 
 	server := &http.Server{Addr: ":" + strconv.Itoa(*port), Handler: router}
@@ -50,8 +52,8 @@ func main() {
 	log.Fatal(server.ListenAndServe())
 }
 
-func autoCloseMonitoring(doorController DoorController, userDao UserDao) {
-	autoclose := NewAutoclose(doorController)
+func autoCloseMonitoring(doorController DoorController, userDao UserDao, garageDoorDao GarageDoorDao) {
+	autoclose := NewAutoclose(doorController, garageDoorDao)
 	shouldNotify := *notification != time.Second*0
 	for true {
 		if autoclose.autoClose() {
@@ -65,9 +67,9 @@ func autoCloseMonitoring(doorController DoorController, userDao UserDao) {
 	}
 }
 
-func registerResources(userDao UserDao, pinDao PinDao, doorController DoorController) *mux.Router {
+func registerResources(userDao UserDao, pinDao PinDao, garageDoorDao GarageDoorDao, doorController DoorController) *mux.Router {
 	userResource := UserResource{userDao: userDao, pinDao: pinDao}
-	garageDoorResource := GarageDoorResource{userDao: userDao, pinDao: pinDao, doorController: doorController}
+	garageDoorResource := GarageDoorResource{userDao: userDao, pinDao: pinDao, garageDoorDao: garageDoorDao, doorController: doorController}
 	assistantResource := AssistantResource{doorController: doorController}
 	router := mux.NewRouter()
 	userResource.register(router)
