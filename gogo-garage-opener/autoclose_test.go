@@ -37,25 +37,25 @@ func (autoCloseDoorController AutoCloseDoorController) close() {
 	log.Info("Noop close")
 }
 
-func TestNewInstanceSetsClosingTimeAt10pm(t *testing.T) {
-	controller := &AutoCloseDoorController{open}
-	now := time.Now()
-	shouldClose := time.Date(now.Year(), now.Month(), now.Day(), 22, 0, 0, 0, time.Local)
-
-	autoclose := NewAutoclose(controller)
-
-	assert.Equal(t, shouldClose, autoclose.shouldCloseTime, "Should close at 10pm")
+type noOpGarageDoorDao struct {
+	shouldClose  time.Time
+	canStayOpen  time.Time
+	openDuration int64
+	enabled      bool
 }
 
-func TestNewInstanceSetsCanStayOpenTimeAt8am(t *testing.T) {
-	controller := &AutoCloseDoorController{open}
-	now := time.Now()
-
-	canStayOpen := time.Date(now.Year(), now.Month(), now.Day(), 8, 0, 0, 0, time.Local)
-
-	autoclose := NewAutoclose(controller)
-
-	assert.Equal(t, canStayOpen, autoclose.canStayOpenTime, "Should stay open at 8am")
+func (noOpGarageDoorDao noOpGarageDoorDao) updateConfiguration(updateConfig []GarageConfiguration) error {
+	return nil
+}
+func (noOpGarageDoorDao noOpGarageDoorDao) getConfiguration() ([]GarageConfiguration, error) {
+	var config []GarageConfiguration
+	for _, day := range [7]string{"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"} {
+		var theDay = day
+		dayConfig := GarageConfiguration{Day: &theDay, OpenDuration: &noOpGarageDoorDao.openDuration, ShouldCloseTime: &noOpGarageDoorDao.shouldClose,
+			CanStayOpenTime: &noOpGarageDoorDao.canStayOpen, Enabled: &noOpGarageDoorDao.enabled}
+		config = append(config, dayConfig)
+	}
+	return config, nil
 }
 
 func TestShouldAutoCloseAfterShouldCloseTime(t *testing.T) {
@@ -63,7 +63,10 @@ func TestShouldAutoCloseAfterShouldCloseTime(t *testing.T) {
 	now := time.Now()
 	shouldClose := now.Add(-time.Minute)
 	canStayOpen := now.Add(-time.Hour)
-	autoclose := Autoclose{openDuration: time.Minute * 2, doorController: controller, shouldCloseTime: shouldClose, canStayOpenTime: canStayOpen}
+	openDuration := int64(120)
+	garageDoorDao := noOpGarageDoorDao{openDuration: openDuration, shouldClose: shouldClose, canStayOpen: canStayOpen}
+	autoclose := NewAutoclose(controller, garageDoorDao)
+	autoclose.openDuration = 120 * time.Second
 
 	autoclose.autoClose()
 
@@ -75,7 +78,10 @@ func TestShouldAutoCloseWhenShouldCloseTimeAfterCanStayOpenTime(t *testing.T) {
 	now := time.Now()
 	shouldClose := now.Add(-time.Minute)
 	canStayOpen := now.Add(-time.Minute * 2)
-	autoclose := Autoclose{openDuration: time.Minute * 2, doorController: controller, shouldCloseTime: shouldClose, canStayOpenTime: canStayOpen}
+	openDuration := int64(120)
+	garageDoorDao := noOpGarageDoorDao{openDuration: openDuration, shouldClose: shouldClose, canStayOpen: canStayOpen}
+	autoclose := NewAutoclose(controller, garageDoorDao)
+	autoclose.openDuration = 120 * time.Second
 
 	autoclose.autoClose()
 
@@ -87,7 +93,10 @@ func TestShouldNotAutoCloseBeforeShouldCloseTime(t *testing.T) {
 	now := time.Now()
 	shouldClose := now.Add(time.Minute)
 	canStayOpen := now.Add(-time.Hour)
-	autoclose := Autoclose{openDuration: time.Minute * 2, doorController: controller, shouldCloseTime: shouldClose, canStayOpenTime: canStayOpen}
+	openDuration := int64(120)
+	garageDoorDao := noOpGarageDoorDao{openDuration: openDuration, shouldClose: shouldClose, canStayOpen: canStayOpen}
+	autoclose := NewAutoclose(controller, garageDoorDao)
+	autoclose.openDuration = 120 * time.Second
 
 	autoclose.autoClose()
 
@@ -99,7 +108,10 @@ func TestShouldAutoCloseBeforeCanStayOpenTime(t *testing.T) {
 	now := time.Now()
 	shouldClose := now.Add(-time.Minute)
 	canStayOpen := now.Add(-time.Hour)
-	autoclose := Autoclose{openDuration: time.Minute * 2, doorController: controller, shouldCloseTime: shouldClose, canStayOpenTime: canStayOpen}
+	openDuration := int64(120)
+	garageDoorDao := noOpGarageDoorDao{openDuration: openDuration, shouldClose: shouldClose, canStayOpen: canStayOpen}
+	autoclose := NewAutoclose(controller, garageDoorDao)
+	autoclose.openDuration = 120 * time.Second
 
 	autoclose.autoClose()
 
@@ -111,7 +123,10 @@ func TestShouldNotOpenAfterShouldCloseTime(t *testing.T) {
 	now := time.Now()
 	shouldClose := now.Add(-time.Minute)
 	canStayOpen := now.Add(-time.Hour)
-	autoclose := Autoclose{openDuration: time.Minute * 2, doorController: controller, shouldCloseTime: shouldClose, canStayOpenTime: canStayOpen}
+	openDuration := int64(120)
+	garageDoorDao := noOpGarageDoorDao{openDuration: openDuration, shouldClose: shouldClose, canStayOpen: canStayOpen}
+	autoclose := NewAutoclose(controller, garageDoorDao)
+	autoclose.openDuration = 120 * time.Second
 
 	autoclose.autoClose()
 
@@ -123,7 +138,10 @@ func TestShouldNotCloseShouldCloseTimeWhenLeftOpenFor1Minutes(t *testing.T) {
 	now := time.Now()
 	shouldClose := now.Add(-time.Minute)
 	canStayOpen := now.Add(-time.Hour)
-	autoclose := Autoclose{openDuration: time.Minute, doorController: controller, shouldCloseTime: shouldClose, canStayOpenTime: canStayOpen}
+	openDuration := int64(120)
+	garageDoorDao := noOpGarageDoorDao{openDuration: openDuration, shouldClose: shouldClose, canStayOpen: canStayOpen}
+	autoclose := NewAutoclose(controller, garageDoorDao)
+	autoclose.openDuration = 60 * time.Second
 
 	autoclose.autoClose()
 
@@ -135,7 +153,10 @@ func TestShouldNotCloseShouldCloseTimeWhenLeftOpenFor3MinutesAndNotShouldCloseYe
 	now := time.Now()
 	shouldClose := now.Add(time.Hour)
 	canStayOpen := now.Add(-time.Hour)
-	autoclose := Autoclose{openDuration: time.Minute * 2, doorController: controller, shouldCloseTime: shouldClose, canStayOpenTime: canStayOpen}
+	openDuration := int64(120)
+	garageDoorDao := noOpGarageDoorDao{openDuration: openDuration, shouldClose: shouldClose, canStayOpen: canStayOpen}
+	autoclose := NewAutoclose(controller, garageDoorDao)
+	autoclose.openDuration = 120 * time.Second
 
 	autoclose.autoClose()
 
@@ -147,7 +168,10 @@ func TestShouldCloseAfterShouldCloseWhenLeftOpenFor3Minutes(t *testing.T) {
 	now := time.Now()
 	shouldClose := now.Add(-time.Minute)
 	canStayOpen := now.Add(-time.Hour)
-	autoclose := Autoclose{openDuration: time.Minute * 2, doorController: controller, shouldCloseTime: shouldClose, canStayOpenTime: canStayOpen}
+	openDuration := int64(120)
+	garageDoorDao := noOpGarageDoorDao{openDuration: openDuration, shouldClose: shouldClose, canStayOpen: canStayOpen}
+	autoclose := NewAutoclose(controller, garageDoorDao)
+	autoclose.openDuration = 120 * time.Second
 
 	autoclose.autoClose()
 
@@ -159,7 +183,10 @@ func TestShouldReturnTrueWhenClose(t *testing.T) {
 	now := time.Now()
 	shouldClose := now.Add(-time.Minute)
 	canStayOpen := now.Add(-time.Hour)
-	autoclose := Autoclose{openDuration: time.Minute * 2, doorController: controller, shouldCloseTime: shouldClose, canStayOpenTime: canStayOpen}
+	openDuration := int64(120)
+	garageDoorDao := noOpGarageDoorDao{openDuration: openDuration, shouldClose: shouldClose, canStayOpen: canStayOpen}
+	autoclose := NewAutoclose(controller, garageDoorDao)
+	autoclose.openDuration = 120 * time.Second
 
 	closing := autoclose.autoClose()
 
@@ -171,7 +198,10 @@ func TestShouldReturnFalseWhenNotClose(t *testing.T) {
 	now := time.Now()
 	shouldClose := now.Add(-time.Minute)
 	canStayOpen := now.Add(-time.Hour)
-	autoclose := Autoclose{openDuration: time.Minute * 1, doorController: controller, shouldCloseTime: shouldClose, canStayOpenTime: canStayOpen}
+	openDuration := int64(120)
+	garageDoorDao := noOpGarageDoorDao{openDuration: openDuration, shouldClose: shouldClose, canStayOpen: canStayOpen}
+	autoclose := NewAutoclose(controller, garageDoorDao)
+	autoclose.openDuration = 60 * time.Second
 
 	closing := autoclose.autoClose()
 
@@ -183,7 +213,10 @@ func TestIncreaseOpenDurationWhenNotClosed(t *testing.T) {
 	now := time.Now()
 	shouldClose := now.Add(-time.Minute)
 	canStayOpen := now.Add(-time.Hour)
-	autoclose := Autoclose{openDuration: time.Minute * 1, doorController: controller, shouldCloseTime: shouldClose, canStayOpenTime: canStayOpen}
+	openDuration := int64(120)
+	garageDoorDao := noOpGarageDoorDao{openDuration: openDuration, shouldClose: shouldClose, canStayOpen: canStayOpen}
+	autoclose := NewAutoclose(controller, garageDoorDao)
+	autoclose.openDuration = 60 * time.Second
 
 	autoclose.autoClose()
 
@@ -195,7 +228,10 @@ func TestResetOpenDurationWhenClosed(t *testing.T) {
 	now := time.Now()
 	shouldClose := now.Add(-time.Minute)
 	canStayOpen := now.Add(-time.Hour)
-	autoclose := Autoclose{openDuration: time.Minute * 2, doorController: controller, shouldCloseTime: shouldClose, canStayOpenTime: canStayOpen}
+	openDuration := int64(120)
+	garageDoorDao := noOpGarageDoorDao{openDuration: openDuration, shouldClose: shouldClose, canStayOpen: canStayOpen}
+	autoclose := NewAutoclose(controller, garageDoorDao)
+	autoclose.openDuration = 120 * time.Second
 
 	autoclose.autoClose()
 
@@ -207,20 +243,25 @@ func TestResetOpenDurationWhenClosing(t *testing.T) {
 	now := time.Now()
 	shouldClose := now.Add(-time.Minute)
 	canStayOpen := now.Add(-time.Hour)
-	autoclose := Autoclose{openDuration: time.Minute * 2, doorController: controller, shouldCloseTime: shouldClose, canStayOpenTime: canStayOpen}
+	openDuration := int64(120)
+	garageDoorDao := noOpGarageDoorDao{openDuration: openDuration, shouldClose: shouldClose, canStayOpen: canStayOpen}
+	autoclose := NewAutoclose(controller, garageDoorDao)
+	autoclose.openDuration = 120 * time.Second
 
 	autoclose.autoClose()
 
 	assert.Equal(t, time.Minute*0, autoclose.openDuration, "Should reset open duration from 1 to 0 minutes")
 }
 
-
 func TestShouldResetTimesToRolloverDay(t *testing.T) {
 	controller := &AutoCloseDoorController{open}
 	now := time.Now()
 	shouldClose := now.Add(-time.Hour * 24).Add(time.Minute)
 	canStayOpen := now.Add(-time.Hour * 25)
-	autoclose := Autoclose{openDuration: time.Minute * 2, doorController: controller, shouldCloseTime: shouldClose, canStayOpenTime: canStayOpen}
+	openDuration := int64(120)
+	garageDoorDao := noOpGarageDoorDao{openDuration: openDuration, shouldClose: shouldClose, canStayOpen: canStayOpen}
+	autoclose := NewAutoclose(controller, garageDoorDao)
+	autoclose.openDuration = 120 * time.Second
 
 	should := autoclose.shouldClose()
 

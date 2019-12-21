@@ -20,12 +20,15 @@ const timeToClose = 1 * time.Minute
 type GarageDoorResource struct {
 	userDao        UserDao
 	pinDao         PinDao
+	garageDoorDao  GarageDoorDao
 	doorController DoorController
 }
 
 func (garageDoorResource GarageDoorResource) register(router *mux.Router) {
 	subRouter := router.PathPrefix("/garage").Subrouter()
 
+	subRouter.Path("/config").Methods("GET").Handler(jwtCheckHandleFunc(garageDoorResource.getConfiguration))
+	subRouter.Path("/config").Methods("PUT").Handler(jwtCheckHandleFunc(garageDoorResource.updateConfiguration))
 	subRouter.Path("/toggle").Methods("POST").Handler(jwtCheckHandleFunc(garageDoorResource.toggleGarage))
 	subRouter.Path("/state").Methods("GET").Handler(jwtCheckHandleFunc(garageDoorResource.getState))
 	subRouter.Path("/one-time-pin/{oneTimePin}").Methods("POST").HandlerFunc(garageDoorResource.useOneTimePin)
@@ -99,4 +102,37 @@ func (garageDoorResource GarageDoorResource) getState(w http.ResponseWriter, r *
 		"Description": state.description(),
 	}
 	json.NewEncoder(w).Encode(stateResponse)
+}
+
+func (garageDoorResource GarageDoorResource) getConfiguration(w http.ResponseWriter, r *http.Request) {
+	log.Debug("Getting garage configuration")
+	config, err := garageDoorResource.garageDoorDao.getConfiguration()
+	if err != nil {
+		w.WriteHeader(500)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(config)
+}
+
+func (garageDoorResource GarageDoorResource) updateConfiguration(w http.ResponseWriter, r *http.Request) {
+	var updateConfig []GarageConfiguration
+	err := json.NewDecoder(r.Body).Decode(&updateConfig)
+	log.WithField("config", updateConfig).Debug("Updating garage configuration")
+	if err != nil {
+		w.WriteHeader(500)
+		return
+	}
+	err = garageDoorResource.garageDoorDao.updateConfiguration(updateConfig)
+	if err != nil {
+		w.WriteHeader(500)
+		return
+	}
+	config, err := garageDoorResource.garageDoorDao.getConfiguration()
+	if err != nil {
+		w.WriteHeader(500)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(config)
 }
