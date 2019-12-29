@@ -256,8 +256,8 @@ func TestResetOpenDurationWhenClosing(t *testing.T) {
 func TestShouldResetTimesToRolloverDay(t *testing.T) {
 	controller := &AutoCloseDoorController{open}
 	now := time.Now()
-	shouldClose := now.Add(-time.Hour * 24).Add(time.Minute)
-	canStayOpen := now.Add(-time.Hour * 25)
+	shouldClose := now.Add(-time.Hour * 23)
+	canStayOpen := now.Add(-time.Hour * 24).Add(-time.Minute)
 	openDuration := int64(120)
 	garageDoorDao := noOpGarageDoorDao{openDuration: openDuration, shouldClose: shouldClose, canStayOpen: canStayOpen}
 	autoclose := NewAutoclose(controller, garageDoorDao)
@@ -265,5 +265,5 @@ func TestShouldResetTimesToRolloverDay(t *testing.T) {
 
 	should := autoclose.shouldClose()
 
-	assert.Equal(t, true, should, "Should not close after resetting times")
+	assert.Equal(t, false, should, "Should not close after resetting times")
 }

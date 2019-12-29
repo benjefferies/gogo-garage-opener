@@ -31,7 +31,12 @@ func (autoclose Autoclose) resetShouldCloseAndStayOpenTimes() Autoclose {
 		autoclose.config = GarageConfiguration{Day: &day, ShouldCloseTime: &shouldCloseTime, CanStayOpenTime: &canStayOpenTime, Enabled: &enabled, OpenDuration: &canStayOpenDuration}
 		log.WithField("config", autoclose.config).Error("Could not get garage configuration using default")
 	} else {
-		autoclose.config = getConfigByDay(now.Weekday().String(), config)
+		dayConfig := getConfigByDay(now.Weekday().String(), config)
+		shouldCloseTime := time.Date(now.Year(), now.Month(), now.Day(), dayConfig.ShouldCloseTime.Hour(), dayConfig.ShouldCloseTime.Minute(), dayConfig.ShouldCloseTime.Second(), 0, time.Local)
+		canStayOpenTime := time.Date(now.Year(), now.Month(), now.Day(), dayConfig.CanStayOpenTime.Hour(), dayConfig.CanStayOpenTime.Minute(), dayConfig.CanStayOpenTime.Second(), 0, time.Local)
+		dayConfig.ShouldCloseTime = &shouldCloseTime
+		dayConfig.CanStayOpenTime = &canStayOpenTime
+		autoclose.config = dayConfig
 	}
 	return autoclose
 }
