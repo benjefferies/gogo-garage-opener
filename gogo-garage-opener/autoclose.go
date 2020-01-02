@@ -53,11 +53,12 @@ func getConfigByDay(day string, config []GarageConfiguration) GarageConfiguratio
 func (autoclose Autoclose) shouldClose() bool {
 	autoclose.resetShouldCloseAndStayOpenTimes()
 	now := time.Now()
-	openTooLong := autoclose.openDuration >= time.Second*time.Duration(autoclose.openDuration)
+	openTooLong := autoclose.openDuration.Seconds() >= float64(*autoclose.config.OpenDuration)
 	canStayOpen := now.After(*autoclose.config.CanStayOpenTime) && now.Before(*autoclose.config.ShouldCloseTime)
 	log.WithField("openTooLong", openTooLong).
 		WithField("canStayOpen", canStayOpen).
-		WithField("openDuration", autoclose.openDuration).
+		WithField("currentOpenDuration", autoclose.openDuration).
+		WithField("OpenDurationConfig", *autoclose.config.OpenDuration).
 		WithField("shouldCloseTime", autoclose.config.ShouldCloseTime.Format("3:04:05 PM")).
 		WithField("canStayOpenTime", autoclose.config.CanStayOpenTime.Format("3:04:05 PM")).
 		WithField("now", now.Format("3:04:05 PM")).
