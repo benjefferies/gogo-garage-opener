@@ -58,10 +58,10 @@ func autoCloseMonitoring(doorController DoorController, userDao UserDao, garageD
 	for true {
 		if autoclose.autoClose() {
 			log.Info("Sending emails for close notification")
-			sendMail(userDao, "Autoclose: Garage door left open", fmt.Sprintf("Garage door has been left open for %vs", autoclose.openDuration*time.Second))
+			sendMail(userDao, "Autoclose: Garage door left open", fmt.Sprintf("Garage door has been left open for %vs", autoclose.openDuration.Seconds()))
 		} else if shouldNotify && autoclose.openDuration > *notification {
 			log.Info("Sending emails for open notification")
-			sendMail(userDao, "Notification: Garage door left open", fmt.Sprintf("Garage door has been left open for %vs", autoclose.openDuration*time.Second))
+			sendMail(userDao, "Notification: Garage door left open", fmt.Sprintf("Garage door has been left open for %vs", autoclose.openDuration.Seconds()))
 		}
 		time.Sleep(time.Minute)
 	}
