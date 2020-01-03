@@ -82,11 +82,22 @@ func (garageDoorResource GarageDoorResource) toggleGarage(w http.ResponseWriter,
 	log.WithField("email", email).Info("opening or closing garage")
 	vars := r.URL.Query()
 	autoclose := vars.Get("autoclose")
+	timeQuery := vars.Get("time")
+	var sleepDuration time.Duration
+	if timeQuery == "" {
+		sleepDuration = 60 * time.Second
+	} else {
+		sleep, err := strconv.Atoi(timeQuery)
+		sleepDuration, err = time.ParseDuration(fmt.Sprintf("%vs", sleep))
+		if err != nil {
+			sleepDuration = 60 * time.Second
+		}
+	}
 	go func() {
 		garageDoorResource.doorController.toggleDoor()
 		if autocloseBool, _ := strconv.ParseBool(autoclose); autocloseBool {
 			log.WithField("email", email).Info("autoclosing garage in 60s")
-			time.Sleep(60 * time.Second)
+			time.Sleep(sleepDuration)
 			garageDoorResource.doorController.toggleDoor()
 		}
 	}()
