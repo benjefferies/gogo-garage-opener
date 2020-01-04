@@ -35,7 +35,7 @@ func basicAuth(h http.HandlerFunc) http.Handler {
 }
 
 func (assistantResource AssistantResource) handleWebhook(w http.ResponseWriter, r *http.Request) {
-	log.Info("Hit webhook")
+	log.WithField("headers", r.Header).Info("Hit webhook")
 	var err error
 	var unmar jsonpb.Unmarshaler
 	unmar.AllowUnknownFields = true
@@ -56,8 +56,9 @@ func (assistantResource AssistantResource) handleWebhook(w http.ResponseWriter, 
 		return
 	}
 	w.WriteHeader(200)
+	state := assistantResource.doorController.getDoorState()
 	json.NewEncoder(w).Encode(dialogflow.WebhookResponse{
-		FulfillmentText: "Boo",
+		FulfillmentText: fmt.Sprintf("The garage door is %s, what's next?", state.description()),
 	})
 }
 
