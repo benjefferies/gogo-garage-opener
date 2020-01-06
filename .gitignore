@@ -34,3 +34,4 @@ caddy/hosts
 caddy/resolv.conf
 .DS_Store
 .env
+node_modules/

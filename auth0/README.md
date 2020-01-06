@@ -6,7 +6,7 @@ Auth0 is Authentication/Authorisation as a service and has a free tier offering 
 1. Register an account at https://auth0.com/
 1. Create a new API https://auth0.com/docs/apis
    * **Name**: gogo-garage-opener
-   * **Identifier**: https://<YOUR_GARAGE_DOOR_DOMAIN>/api
+   * **Identifier**: https://<YOUR_GARAGE_DOOR_DOMAIN>
    * **Signing Algorithm**: RS256
 1. Create a react native application https://auth0.com/docs/quickstart/native/react-native/00-login
    * **Name**: gogo-garage-opener-app

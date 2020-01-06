@@ -39,7 +39,7 @@ func jwtCheckHandleFunc(httpFunc http.HandlerFunc) *negroni.Negroni {
 	jwtMiddleware := jwtmiddleware.New(jwtmiddleware.Options{
 		ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
 			// Verify 'aud' claim
-			aud := fmt.Sprintf("https://%s/api", *rs)
+			aud := fmt.Sprintf("https://%s", *rs)
 			log.WithField("aud", aud).Debug("Validating audience")
 			checkAud := token.Claims.(jwt.MapClaims).VerifyAudience(aud, false)
 			if !checkAud {
