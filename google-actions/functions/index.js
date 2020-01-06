@@ -25,6 +25,15 @@ function getUserInfo(accessToken) {
   return userInfo
 }
 
+function getPin(body) { 
+  return body && body.inputs[0] && 
+    body.inputs[0].payload && 
+    body.inputs[0].payload.commands[0] && 
+    body.inputs[0].payload.commands[0].execution[0] && 
+    body.inputs[0].payload.commands[0].execution[0].challenge && 
+    body.inputs[0].payload.commands[0].execution[0].challenge.pin || undefined
+}
+
 async function getGarageState(accessToken) {
   const response = await axios.get(
     `${getRS(accessToken)}/garage/state`,
@@ -117,6 +126,40 @@ app.onQuery(async (body, headers) => {
 app.onExecute(async (body, headers) => {
   const accessToken = getAccessToken(headers);
   const userId = await getUserId(accessToken)
+  const pin = getPin(body)
+  console.log(`Got pin ${pin}`)
+  if (!pin) {
+    return {
+      requestId: body.requestId,
+      agentUserId: userId,
+      payload: {
+        commands: [{
+          ids: ["garage-opener"],
+          status: "ERROR",
+          errorCode: "challengeNeeded",
+          challengeNeeded: {
+            "type": "pinNeeded"
+          }
+        }]
+      }
+    };
+  }
+  if (pin !== "9876") {
+    return {
+      requestId: body.requestId,
+      agentUserId: userId,
+      payload: {
+        commands: [{
+          ids: ["garage-opener"],
+          status: "ERROR",
+          errorCode: "challengeNeeded",
+          challengeNeeded: {
+            "type": "challengeFailedPinNeeded"
+          }
+        }]
+      }
+    };
+  }
   var online = true;
   try {
     const state = await getGarageState(accessToken);
