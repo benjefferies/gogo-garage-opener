@@ -71,11 +71,9 @@ func autoCloseMonitoring(doorController DoorController, userDao UserDao, garageD
 func registerResources(userDao UserDao, pinDao PinDao, garageDoorDao GarageDoorDao, doorController DoorController) *mux.Router {
 	userResource := UserResource{userDao: userDao, pinDao: pinDao}
 	garageDoorResource := GarageDoorResource{userDao: userDao, pinDao: pinDao, garageDoorDao: garageDoorDao, doorController: doorController}
-	assistantResource := AssistantResource{doorController: doorController}
 	router := mux.NewRouter()
 	userResource.register(router)
 	garageDoorResource.register(router)
-	assistantResource.register(router)
 	return router
 }
 
