@@ -1,6 +1,7 @@
 const { smarthome } = require("actions-on-google");
 const functions = require("firebase-functions");
 const axios = require("axios").default;
+const jwtDecode = require('jwt-decode');
 
 const app = smarthome();
 
@@ -10,9 +11,23 @@ function getAccessToken(headers) {
   return authorization.substr(7);
 }
 
+function getRS(accessToken) { 
+  const decoded = jwtDecode(accessToken);
+  const rs = decoded['aud'][0]
+  console.log(`Got rs: ${rs}`)
+  return rs
+}
+
+function getUserInfo(accessToken) { 
+  const decoded = jwtDecode(accessToken);
+  const userInfo = decoded['aud'][1]
+  console.log(`Got userinfo: ${userInfo}`)
+  return userInfo
+}
+
 async function getGarageState(accessToken) {
   const response = await axios.get(
-    "https://open.mygaragedoor.space/garage/state",
+    `${getRS(accessToken)}/garage/state`,
     { headers: { Authorization: `Bearer ${accessToken}` } }
   );
   console.log(response);
@@ -21,7 +36,7 @@ async function getGarageState(accessToken) {
 
 async function getUserId(accessToken) {
   const response = await axios.get(
-    "https://gogo-garage-opener.eu.auth0.com/userinfo",
+    getUserInfo(accessToken),
     { headers: { Authorization: `Bearer ${accessToken}` } }
   );
   console.log(response);
@@ -30,7 +45,7 @@ async function getUserId(accessToken) {
 
 async function toggleGarageDoor(accessToken) {
   const response = await axios.post(
-    "https://open.mygaragedoor.space/garage/toggle",
+    `${getRS(accessToken)}/garage/toggle`,
     {},
     { headers: { Authorization: `Bearer ${accessToken}` } }
   );
