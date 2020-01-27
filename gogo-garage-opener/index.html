@@ -40,6 +40,7 @@
       border: 1px solid #c6c6c6;
       box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
       color: #222;
+      cursor: pointer;
     }
 
     form {
@@ -59,7 +60,7 @@
     <hr class="w3-border-grey" style="margin:auto;width:40%">
     <p class="w3-xlarge w3-center">By clicking the button below it will open the garage door. The garage door will
       automatically close {{.CloseTime}}
-      seconds after clicking the buttont</p>
+      seconds after clicking the button</p>
     <form name="myform" action="/garage/one-time-pin/{{.Pin}}" method="post">
       <input type="submit" value="Open">
     </form>
