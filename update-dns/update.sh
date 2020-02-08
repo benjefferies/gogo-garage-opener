@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -e
 
-apk add curl
+apt-get update && apt-get install curl -y
 git clone https://github.com/benjefferies/gogo-garage-opener.git
 pushd gogo-garage-opener/update-dns
 terraform init
