@@ -1,9 +1,10 @@
 [Unit]
-Description=noip2 service
+Description=Update DNS A record
+Wants=update-dns.timer
 
 [Service]
 Type=forking
-ExecStart=/usr/local/bin/noip2
+ExecStart=/usr/bin/docker
 Restart=always
 
 [Install]
