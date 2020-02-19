@@ -18,7 +18,7 @@ require (
 	github.com/sirupsen/logrus v1.4.2
 	github.com/sourcegraph/go-ses v0.0.0-20160405160939-6bd8d17cf7c1
 	github.com/stianeikeland/go-rpio v4.2.0+incompatible
-	github.com/stretchr/testify v1.4.0
+	github.com/stretchr/testify v1.5.0
 	github.com/ventu-io/go-shortid v0.0.0-20171029131806-771a37caa5cf
 	golang.org/x/net v0.0.0-20191028085509-fe3aa8a45271 // indirect
 	golang.org/x/sys v0.0.0-20191029155521-f43be2a4598c // indirect
