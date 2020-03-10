@@ -1,5 +1,7 @@
 [Unit]
 Description=Garage opener service
+Requires=docker.service network-online.target
+After=docker.service network-online.target
 
 [Service]
 User=pi
