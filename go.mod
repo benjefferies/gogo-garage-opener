@@ -20,7 +20,6 @@ require (
 	github.com/stianeikeland/go-rpio v4.2.0+incompatible
 	github.com/stretchr/testify v1.5.1
 	github.com/ventu-io/go-shortid v0.0.0-20171029131806-771a37caa5cf
-	golang.org/x/net v0.0.0-20191028085509-fe3aa8a45271 // indirect
 	golang.org/x/sys v0.0.0-20191029155521-f43be2a4598c // indirect
 	golang.org/x/text v0.3.2 // indirect
 	google.golang.org/genproto v0.0.0-20191028173616-919d9bdd9fe6
