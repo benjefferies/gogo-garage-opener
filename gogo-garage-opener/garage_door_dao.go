@@ -104,7 +104,6 @@ func (garageDoorDao SqliteGarageDoorDao) getConfiguration() ([]GarageConfigurati
 		parsedCanStayOpenTime, _ := time.Parse(time.RFC3339, canStayOpenTime)
 		dayConfig.ShouldCloseTime = &parsedShouldCloseTime
 		dayConfig.CanStayOpenTime = &parsedCanStayOpenTime
-		log.WithField("dayConfig", dayConfig).Debug("Found garage config")
 		config = append(config, dayConfig)
 	}
 	if err != nil {
@@ -112,6 +111,7 @@ func (garageDoorDao SqliteGarageDoorDao) getConfiguration() ([]GarageConfigurati
 		tx.Rollback()
 	}
 	tx.Commit()
+	log.WithField("config", config).Debug("Found garage config")
 	return config, err
 }
 
