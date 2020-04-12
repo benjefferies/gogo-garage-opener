@@ -16,5 +16,6 @@ env:
   - secure: ISHPFmtml8r9/zUBJFVOotr+wYN2aJfSBz/SrQ8kd0gtWbQ/w76F1WMvY1XXobGSa1bh+wEPDvYVac5X6HvSPKC87YXlnZxHOuuGJs3DGVWrMQR7pmpgRmW5zwE3o9vIRpD+WvPfXPCROod0cbaY7oivq6JWjl+XU7UTHvttD1yY3BQDsNI21glJDduS2t8xSUIPasoKC+arBu8O+ptcHlBa16gVgLXzm9T7lqdK14AAbEfyQTva67XsPn0/3uUsv0sGxBKMsqha7N/DZwOHrdybzwJYcwAkwPNEfxUfj/suz9R88cNNRkrdMSX3Sx/HsSvU9SWMu+IgH+elohxK9mPrR9vKEjFFwe4o+0s8HnASpJiCr4xtD/E71vXi1WlA9DvGaHDUIHZ1Y1zC/Ui1KI1xQ3gWRdjNvBfLLKc4d4DwwtH3+jzNdunW6s71aeh2dOpkgpk1aLru12+EWYwjuc55aKLwgqrGD8qa5QhWBedQHsVotkOuJfkAiDLz6HKQ3HMyQoz4yFwKQ0H3od5QyPoLS9Bi3scsIZ7gQRhEuT+ToQcQnTrZFHrikrl5k1K5d+XbI5b7UdkGZnutBHyqYmttKQuT4acAs+iPQVvmB8ATnAiqPIRznzhrZbyP+GY/2GGuunDwKSx8h0Nu7nj8Cgc0xIc+iYILG/tY3UOx7pQ=
   - secure: oxGXnI/jycvA/f0WRiZ8414FtsGOSXzTpkadJ7kV8dnu4LxifhTvuOb48U3sujEo5ooGwsXgR3l7jXHxGVzKVtZlRggu8dPx+7rusUGn0Kua+SeY5hjwaoAYmyKlBMOlpFfCuTx9AxLPtQF1OF1aLMTHVTU3BJFLNfF7OvQgiUfn1pfqLvjyY7bOPcozEKYHPHvydIBAaIxG52U+hyfNcxvnMFuKdOIRy40GOJBqvBv84E/FIZSyEYbngY3QfbINNCZL61uvTjq657Q/+h+Yy+ZV+zb4ckaD/dU2P7dJT/4f7Ak+q+nok1kMNYPvR4mF2gL9CDXICGaP50c7UjkQBp4U0x4N1tIKJAlAqMPYkokVqfXJ5aPLxwpOUD9L2rIhPLDwR0zLwt6AkvWuZ31pMvc8NmovTbykeOunFkKM6Dg03a+PbIt7pxv/Ojg/QmEx6AjWj+rUtC7d27thgFM23KJbbzwO/ySok4QBtUqHFK1BuRFL+fBZ7tVgT+BDu8gG86Codg6SyGkc3hYQi99aNKIGPuTk4B0VwJxGaw77Txi+En1MGh6uGTK77oAISRaoavMyNAG45ThBqZpvy8+PyE1LPNk4uV2KOntB14pwLTYA5eJCYDrnylOYQgNDtUHNhiq6JbZ/gUqMMkYWyHYLj03SABenvZLeoymWBQz8CFQ=
 script:
-- go build -o gogo-garage-opener.bin ./...
-- go test -v ./...
+- ( cd gogo-garage-opener && go build -o gogo-garage-opener.bin ./... )
+- ( cd gogo-garage-opener && go test -v ./... )
+- ( cd service-discovery && go build -o service-discovery.bin ./... )
