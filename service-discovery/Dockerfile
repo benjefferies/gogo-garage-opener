@@ -16,9 +16,9 @@ ENV GOARM 7
 # Cgo enables the creation of Go packages that call C code. (required for https://github.com/mattn/go-sqlite3)
 ENV CGO_ENABLED 1
 
-ADD gogo-garage-opener /go/src/github.com/benjefferies/gogo-garage-opener
+ADD . /go/src/github.com/benjefferies/gogo-garage-opener/service-discovery
 
-WORKDIR /go/src/github.com/benjefferies/gogo-garage-opener
+WORKDIR /go/src/github.com/benjefferies/gogo-garage-opener/service-discovery
 
 RUN go get -d -v ./...
 RUN go install -v ./...
@@ -27,7 +27,6 @@ FROM arm32v7/debian:9-slim
 
 WORKDIR /var/gogo-garage-opener
 
-COPY --from=builder /go/bin/linux_arm/gogo-garage-opener /var/gogo-garage-opener/gogo-garage-opener
-COPY gogo-garage-opener/index.html /var/gogo-garage-opener/index.html
+COPY --from=builder /go/bin/linux_arm/service-discovery /var/gogo-garage-opener/service-discovery
 
-CMD [ "./gogo-garage-opener" ]
+CMD [ "./service-discovery" ]
