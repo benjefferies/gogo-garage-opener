@@ -1,7 +1,7 @@
 version: '3'
 services:
   caddy:
-    image: "elswork/arm-caddy"
+    image: "benjjefferies/caddy-arm6"
     ports:
     - "443:443"
     - "80:80"
