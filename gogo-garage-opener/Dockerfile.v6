@@ -26,7 +26,7 @@ FROM arm32v6/alpine
 WORKDIR /var/gogo-garage-opener
 
 COPY --from=builder /work/go/bin/gogo-garage-opener /var/gogo-garage-opener/gogo-garage-opener
-COPY gogo-garage-opener/index.html /var/gogo-garage-opener/index.html
+COPY index.html /var/gogo-garage-opener/index.html
 
 RUN apk add libc6-compat
 

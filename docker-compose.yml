@@ -41,8 +41,7 @@ services:
   service-discovery:
     privileged: true
     image: "benjjefferies/service-discovery:armv6"
-    ports:
-    - "42424:42424"
+    network_mode: host
     environment:
       - RS=${RS}
       - AS=${AS}
