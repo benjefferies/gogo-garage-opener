@@ -18,9 +18,7 @@ services:
             max-size: 50m
   gogo-garage-opener:
     privileged: true
-    build: 
-      context: .
-      dockerfile: gogo-garage-opener/Dockerfile
+    image: "benjjefferies/gogo-garage-opener:armv6"
     volumes:
       - $HOME/data:/var/gogo-garage-opener/data
       - /etc/ssl/certs:/etc/ssl/certs
@@ -42,9 +40,7 @@ services:
             max-size: 50m
   service-discovery:
     privileged: true
-    build: 
-      context: .
-      dockerfile: ./service-discovery/Dockerfile
+    image: "benjjefferies/service-discovery:armv6"
     ports:
     - "42424:42424"
     environment:
