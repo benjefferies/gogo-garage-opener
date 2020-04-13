@@ -10,7 +10,7 @@ ENV CXX=arm-linux-gnueabihf-g++
 ENV GOOS linux
 # The CPU architecture of the raspberry pi
 ENV GOARCH arm
-ENV GOARM 7
+ENV GOARM 6
 # Cgo enables the creation of Go packages that call C code. (required for https://github.com/mattn/go-sqlite3)
 ENV CGO_ENABLED 1
 
