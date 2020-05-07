@@ -73,6 +73,7 @@ func registerResources(userDao UserDao, pinDao PinDao, garageDoorDao GarageDoorD
 	router := mux.NewRouter()
 	userResource.register(router)
 	garageDoorResource.register(router)
+	router.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(200) }).Name("ping")
 	return router
 }
 
