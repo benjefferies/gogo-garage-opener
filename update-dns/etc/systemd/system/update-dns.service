@@ -5,7 +5,7 @@ Wants=update-dns.timer
 [Service]
 Type=simple
 EnvironmentFile=/home/pi/gogo-garage-opener/.env
-ExecStart=/usr/bin/docker run --rm -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_KEY} -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} -v /home/pi/gogo-garage-opener/update-dns:/home/code --workdir=/home/code --entrypoint sh benjjefferies/terraform-arm:v0.12.20 -c "./update.sh"
+ExecStart=/home/pi/gogo-garage-opener/update-dns/update.sh
 WorkingDirectory=/home/pi/gogo-garage-opener/update-dns/
 
 [Install]
