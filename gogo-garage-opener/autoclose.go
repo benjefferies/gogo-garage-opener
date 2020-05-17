@@ -38,6 +38,7 @@ func (autoclose Autoclose) resetShouldCloseAndStayOpenTimes() Autoclose {
 		dayConfig.CanStayOpenTime = &canStayOpenTime
 		autoclose.config = dayConfig
 	}
+	log.WithField("config", autoclose.config).Error("Reset should close and stay open times")
 	return autoclose
 }
 
