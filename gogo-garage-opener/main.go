@@ -54,7 +54,7 @@ func autoCloseMonitoring(doorController DoorController, userDao UserDao, garageD
 	autoclose := NewAutoclose(doorController, garageDoorDao)
 	shouldNotify := *notification != time.Second*0
 	for true {
-		autoclose.resetShouldCloseAndStayOpenTimes()
+		autoclose = autoclose.resetShouldCloseAndStayOpenTimes()
 		message := fmt.Sprintf("Garage door has been left open for %v", autoclose.openDuration)
 		if autoclose.autoClose() {
 			log.WithField("message", message).Info("Sending emails for close notification")
