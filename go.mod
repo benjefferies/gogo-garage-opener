@@ -10,7 +10,7 @@ require (
 	github.com/go-resty/resty/v2 v2.2.0
 	github.com/golang/protobuf v1.3.5
 	github.com/gorilla/context v1.1.1
-	github.com/gorilla/mux v1.7.4
+	github.com/gorilla/mux v1.8.0
 	github.com/grandcat/zeroconf v1.0.0
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/mattn/go-sqlite3 v1.13.0
