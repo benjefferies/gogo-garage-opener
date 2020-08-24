@@ -12,14 +12,13 @@ require (
 	github.com/gorilla/context v1.1.1
 	github.com/gorilla/mux v1.8.0
 	github.com/grandcat/zeroconf v1.0.0
-	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/mattn/go-sqlite3 v1.13.0
 	github.com/namsral/flag v1.7.4-pre
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/sirupsen/logrus v1.6.0
 	github.com/sourcegraph/go-ses v0.0.0-20160405160939-6bd8d17cf7c1
 	github.com/stianeikeland/go-rpio v4.2.0+incompatible
-	github.com/stretchr/testify v1.5.1
+	github.com/stretchr/testify v1.6.1
 	github.com/ventu-io/go-shortid v0.0.0-20171029131806-771a37caa5cf
 	golang.org/x/sys v0.0.0-20191029155521-f43be2a4598c // indirect
 	golang.org/x/text v0.3.2 // indirect
