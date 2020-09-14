@@ -12,7 +12,7 @@ require (
 	github.com/gorilla/context v1.1.1
 	github.com/gorilla/mux v1.8.0
 	github.com/grandcat/zeroconf v1.0.0
-	github.com/mattn/go-sqlite3 v1.14.1
+	github.com/mattn/go-sqlite3 v1.14.3
 	github.com/namsral/flag v1.7.4-pre
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/sirupsen/logrus v1.6.0
