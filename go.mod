@@ -15,7 +15,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.1
 	github.com/namsral/flag v1.7.4-pre
 	github.com/patrickmn/go-cache v2.1.0+incompatible
-	github.com/sirupsen/logrus v1.6.0
+	github.com/sirupsen/logrus v1.7.1
 	github.com/sourcegraph/go-ses v0.0.0-20160405160939-6bd8d17cf7c1
 	github.com/stianeikeland/go-rpio v4.2.0+incompatible
 	github.com/stretchr/testify v1.6.1
