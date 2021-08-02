@@ -3,7 +3,7 @@ module github.com/benjefferies/gogo-garage-opener
 go 1.12
 
 require (
-	github.com/Rican7/retry v0.1.0
+	github.com/Rican7/retry v0.3.0
 	github.com/auth0/go-jwt-middleware v0.0.0-20190805220309-36081240882b
 	github.com/codegangsta/negroni v1.0.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
