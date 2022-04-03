@@ -9,7 +9,7 @@ import (
 
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"
 	"github.com/codegangsta/negroni"
-	jwt "github.com/dgrijalva/jwt-go"
+	jwt "github.com/form3tech-oss/jwt-go"
 	"github.com/gorilla/context"
 	log "github.com/sirupsen/logrus"
 )
@@ -35,33 +35,35 @@ type CustomClaims struct {
 	jwt.StandardClaims
 }
 
+func getAuth0Jwks(token *jwt.Token) (interface{}, error) {
+	// Verify 'aud' claim
+	aud := fmt.Sprintf("https://%s", *rs)
+	log.WithField("aud", aud).Debug("Validating audience")
+	checkAud := token.Claims.(jwt.MapClaims).VerifyAudience(aud, false)
+	if !checkAud {
+		return token, errors.New("invalid audience")
+	}
+	// Verify 'iss' claim
+	iss := fmt.Sprintf("https://%s/", *as)
+	log.WithField("iss", iss).Debug("Validating issuer")
+	checkIss := token.Claims.(jwt.MapClaims).VerifyIssuer(iss, false)
+	if !checkIss {
+		return token, errors.New("invalid issuer")
+	}
+
+	cert, err := getPemCert(token)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	result, _ := jwt.ParseRSAPublicKeyFromPEM([]byte(cert))
+	return result, nil
+}
+
 func jwtCheckHandleFunc(httpFunc http.HandlerFunc) *negroni.Negroni {
 	jwtMiddleware := jwtmiddleware.New(jwtmiddleware.Options{
-		ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
-			// Verify 'aud' claim
-			aud := fmt.Sprintf("https://%s", *rs)
-			log.WithField("aud", aud).Debug("Validating audience")
-			checkAud := token.Claims.(jwt.MapClaims).VerifyAudience(aud, false)
-			if !checkAud {
-				return token, errors.New("invalid audience")
-			}
-			// Verify 'iss' claim
-			iss := fmt.Sprintf("https://%s/", *as)
-			log.WithField("iss", iss).Debug("Validating issuer")
-			checkIss := token.Claims.(jwt.MapClaims).VerifyIssuer(iss, false)
-			if !checkIss {
-				return token, errors.New("invalid issuer")
-			}
-
-			cert, err := getPemCert(token)
-			if err != nil {
-				panic(err.Error())
-			}
-
-			result, _ := jwt.ParseRSAPublicKeyFromPEM([]byte(cert))
-			return result, nil
-		},
-		SigningMethod: jwt.SigningMethodRS256,
+		ValidationKeyGetter: getAuth0Jwks,
+		SigningMethod:       jwt.SigningMethodRS256,
 	})
 	return negroni.New(negroni.HandlerFunc(jwtMiddleware.HandlerWithNext),
 		negroni.HandlerFunc(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {

@@ -23,6 +23,7 @@ func NewRaspberryPiDoorController(relayPinID int, contactSwitchPinID int) Raspbe
 	contactSwitchPin := rpio.Pin(contactSwitchPinID)
 	relayPin.Output()
 	contactSwitchPin.Input()
+	contactSwitchPin.PullDown()
 	return RaspberryPiDoorController{relayPin: relayPin, contactSwitchPin: contactSwitchPin}
 }
 

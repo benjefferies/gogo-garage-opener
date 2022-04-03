@@ -1,18 +1,13 @@
-FROM golang:1.12-stretch as builder
+FROM arm64v8/golang:1.18 as builder
 
 # Install ARM gcc and build tools
 RUN apt-get -y update && \
-    apt-get -y install crossbuild-essential-armhf
+    apt-get -y install crossbuild-essential-arm64
 
-# The command to use to compile C code.
-ENV CC arm-linux-gnueabihf-gcc
-# The command to use to compile C++ code.
-ENV CXX=arm-linux-gnueabihf-g++
 # The OS running on the raspberry pi
 ENV GOOS linux
 # The CPU architecture of the raspberry pi
-ENV GOARCH arm
-ENV GOARM 7
+ENV GOARCH arm64
 # Cgo enables the creation of Go packages that call C code. (required for https://github.com/mattn/go-sqlite3)
 ENV CGO_ENABLED 1
 
@@ -21,12 +16,12 @@ ADD . /go/src/github.com/benjefferies/gogo-garage-opener/service-discovery
 WORKDIR /go/src/github.com/benjefferies/gogo-garage-opener/service-discovery
 
 RUN go get -d -v ./...
-RUN go install -v ./...
+RUN go build -o service-discovery -v ./...
 
-FROM arm32v7/debian:9-slim
+FROM debian:10-slim
 
 WORKDIR /var/gogo-garage-opener
 
-COPY --from=builder /go/bin/linux_arm/service-discovery /var/gogo-garage-opener/service-discovery
+COPY --from=builder /go/src/github.com/benjefferies/gogo-garage-opener/service-discovery/service-discovery /var/gogo-garage-opener/service-discovery
 
 CMD [ "./service-discovery" ]
