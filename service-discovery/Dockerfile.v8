@@ -16,12 +16,12 @@ ADD . /go/src/github.com/benjefferies/gogo-garage-opener/service-discovery
 WORKDIR /go/src/github.com/benjefferies/gogo-garage-opener/service-discovery
 
 RUN go get -d -v ./...
-RUN go build -o service-discovery -v ./...
+RUN go install -v ./...
 
 FROM debian:10-slim
 
 WORKDIR /var/gogo-garage-opener
 
-COPY --from=builder /go/src/github.com/benjefferies/gogo-garage-opener/service-discovery/service-discovery /var/gogo-garage-opener/service-discovery
+COPY --from=builder /go/bin/service-discovery /var/gogo-garage-opener/service-discovery
 
 CMD [ "./service-discovery" ]

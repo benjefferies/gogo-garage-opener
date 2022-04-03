@@ -22,7 +22,7 @@ FROM debian:10-slim
 
 WORKDIR /var/gogo-garage-opener
 
-COPY --from=builder /go/bin/linux_arm/gogo-garage-opener /var/gogo-garage-opener/gogo-garage-opener
+COPY --from=builder /go/bin/gogo-garage-opener /var/gogo-garage-opener/gogo-garage-opener
 COPY index.html /var/gogo-garage-opener/index.html
 
 CMD [ "./gogo-garage-opener" ]
