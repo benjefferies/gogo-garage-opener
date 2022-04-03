@@ -1,13 +1,12 @@
 version: '3'
 services:
   caddy:
-    image: "abiosoft/caddy"
+    image: caddy
     ports:
     - "443:443"
     - "80:80"
     volumes:
-    - ./caddy:/etc/
-    - $HOME/.caddy:/.caddy
+    - ./caddy/Caddyfile:/etc/caddy/Caddyfile
     - /etc/ssl/certs/:/etc/ssl/certs/
     environment:
       - RS=${RS}
