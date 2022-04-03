@@ -40,7 +40,7 @@ services:
             max-size: 50m
   service-discovery:
     privileged: true
-    image: "benjjefferies/service-discovery:arm64v7"
+    image: "benjjefferies/service-discovery:arm64v8"
     network_mode: host
     environment:
       - RS=${RS}
