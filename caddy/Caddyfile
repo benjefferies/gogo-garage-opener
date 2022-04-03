@@ -1,8 +1,1 @@
-{$RS}
-proxy / gogo-garage-opener:8080 {
-    transparent
-}
-
-tls {
-    max_certs 1000
-}
+reverse_proxy gogo-garage-opener:8080
