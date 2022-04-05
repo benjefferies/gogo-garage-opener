@@ -1,1 +1,3 @@
+open.mygaragedoor.space
+
 reverse_proxy gogo-garage-opener:8080

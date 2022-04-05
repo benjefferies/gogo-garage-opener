@@ -7,7 +7,7 @@ After=docker.service network-online.target
 User=pi
 Type=simple
 EnvironmentFile=/home/pi/gogo-garage-opener/.env
-ExecStart=/home/pi/.local/bin/docker-compose up -d
+ExecStart=docker-compose -f docker-compose-arm64v8.yml up -d
 WorkingDirectory=/home/pi/gogo-garage-opener/
 
 [Install]

@@ -1,13 +1,13 @@
 version: '3'
 services:
   caddy:
-    image: caddy
+    image: caddy:2.4.6-alpine
     ports:
     - "443:443"
     - "80:80"
     volumes:
     - ./caddy/Caddyfile:/etc/caddy/Caddyfile
-    - /etc/ssl/certs/:/etc/ssl/certs/
+    - ./caddy:/data
     environment:
       - RS=${RS}
     restart: always
